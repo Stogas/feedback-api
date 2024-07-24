@@ -2,26 +2,31 @@ package main
 
 import (
 	"fmt"
+	"strconv"
+
 	"log/slog"
-	"net/http"
+
+	"github.com/Stogas/feedback-api/internal/config"
+	feedbacktypes "github.com/Stogas/feedback-api/internal/types"
 
 	"github.com/gin-gonic/gin"
-	feedbacktypes "github.com/Stogas/feedback-api/internal/types"
+	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
+func init() {
+	// loads values from .env into the system
+	if err := godotenv.Load(); err != nil {
+			slog.Info("No .env file found")
+	}
+}
+
 func main() {
-	host := "localhost"
-	user := "test"
-	password := "test"
-	dbname := "test"
-	port := "5432"
-	sslmode := "disable"
-	timeZone := "UTC"
+	conf := config.New()
 
 	postgresConfig := postgres.New(postgres.Config{
-		DSN: fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s", host, user, password, dbname, port, sslmode, timeZone), // data source name, refer https://github.com/jackc/pgx
+		DSN: fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC", conf.Database.Host, conf.Database.User, conf.Database.Password, conf.Database.Name, strconv.Itoa(conf.Database.Port)), // data source name, refer https://github.com/jackc/pgx
 		PreferSimpleProtocol: true, // disables implicit prepared statement usage. By default pgx automatically uses the extended protocol
 	})
 
@@ -41,36 +46,4 @@ func main() {
 	}
 
 	r.Run() // listen and serve on 0.0.0.0:8080
-}
-
-func DBMiddleware(db *gorm.DB) gin.HandlerFunc {
-	return func(c *gin.Context) {
-			ctx := c.Request.Context()
-			c.Set("db", db.WithContext(ctx))
-			c.Next()
-	}
-}
-
-func ping(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"message": "pong",
-	})
-}
-
-func submitSatisfactionEndpoint(c *gin.Context) {
-	var newSatisfaction feedbacktypes.Satisfaction
-
-	if err := c.ShouldBindJSON(&newSatisfaction); err != nil {
-    // If there's an error in parsing JSON, return an error response
-    c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-    return
-  }
-
-	db := c.MustGet("db").(*gorm.DB)
-
-	result := db.Create(&newSatisfaction)
-
-	if result.Error != nil {
-		slog.Error("Welp, got error writing into the database")
-	}
 }
