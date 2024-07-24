@@ -13,3 +13,8 @@ user: test
 password: test
 database: test
 ```
+
+Run app with:
+```shell
+go run main.go
+```
