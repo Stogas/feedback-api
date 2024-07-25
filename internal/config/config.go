@@ -33,7 +33,6 @@ type Config struct {
 }
 
 type MetricsConfig struct {
-  Enabled bool
   Host string
   Port int
 }
@@ -58,7 +57,6 @@ func New() *Config {
       Port: getEnvAsInt("OTLP_GRPC_PORT", 4317),
     },
     Metrics: MetricsConfig{
-      Enabled: getEnvAsBool("METRICS_ENABLED", true),
       Host: getEnvAsString("METRICS_HOST", "0.0.0.0"),
       Port: getEnvAsInt("METRICS_PORT", 2222),
     },

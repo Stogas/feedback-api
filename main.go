@@ -7,10 +7,9 @@ import (
 
 	"log/slog"
 
-	"github.com/chenjiandongx/ginprom"
+	"github.com/Depado/ginprom"
 	"github.com/Stogas/feedback-api/internal/config"
 	feedbacktypes "github.com/Stogas/feedback-api/internal/types"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 
@@ -48,17 +47,20 @@ func main() {
 		}()
 	}
 
-	if conf.Metrics.Enabled {
-		// metrics
-		rMetrics := gin.Default()
-		rMetrics.GET("/metrics", ginprom.PromHandler(promhttp.Handler()))
-		slog.Info("Starting Prometheus exporter", "host", conf.Metrics.Host, "port", conf.Metrics.Port)
-		go func() {
-			if err := rMetrics.Run(fmt.Sprintf("%s:%v", conf.Metrics.Host, conf.Metrics.Port)); err != nil {
-				slog.Error("Failed to run metrics exporter", "error", err)
-			}
-		}()
+	// metrics
+	rMetrics := gin.Default()
+	p := ginprom.New(
+		ginprom.Engine(rMetrics),
+		ginprom.Subsystem("feedbackapi"),
+		ginprom.Path("/metrics"),
+	)
+	slog.Info("Starting Prometheus exporter", "host", conf.Metrics.Host, "port", conf.Metrics.Port)
+	go func() {
+		if err := rMetrics.Run(fmt.Sprintf("%s:%v", conf.Metrics.Host, conf.Metrics.Port)); err != nil {
+			slog.Error("Failed to run metrics exporter", "error", err)
 		}
+	}()
+	// p.AddCustomCounter("satisfaction", "Counts how many good/bad satisfactions are received", []string{"satisfied"})
 
 	postgresConfig := postgres.New(postgres.Config{
 		DSN: fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC", conf.Database.Host, conf.Database.User, conf.Database.Password, conf.Database.Name, strconv.Itoa(conf.Database.Port)), // data source name, refer https://github.com/jackc/pgx
@@ -80,18 +82,19 @@ func main() {
 		gin.SetMode(gin.DebugMode)
 	}
 	r := gin.Default()
+	r.Use(p.Instrument())
 
 	if conf.Tracing.Enabled {
 		r.Use(otelgin.Middleware("feedback-api"))
-	}
-	if conf.Metrics.Enabled {
-		r.Use(ginprom.PromMiddleware(nil))
 	}
 
 	r.GET("/ping", ping)
 
 	rSubmit := r.Group("/submit")
-	rSubmit.Use(DBMiddleware(db))
+	rSubmit.Use(
+		DBMiddleware(db),
+		SatisfactionMiddleware,
+	)
 	{
 		rSubmit.POST("/satisfaction", submitSatisfactionEndpoint)
 	}

@@ -16,13 +16,14 @@ func ping(c *gin.Context) {
 }
 
 func submitSatisfactionEndpoint(c *gin.Context) {
-	var newSatisfaction feedbacktypes.Satisfaction
+	// if err := c.ShouldBindJSON(&newSatisfaction); err != nil {
+  //   // If there's an error in parsing JSON, return an error response
+  //   c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	// 	slog.Warn("Error parsing submitted JSON", "error", err)
+  //   return
+  // }
 
-	if err := c.ShouldBindJSON(&newSatisfaction); err != nil {
-    // If there's an error in parsing JSON, return an error response
-    c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-    return
-  }
+	newSatisfaction := c.MustGet("satisfaction").(feedbacktypes.Satisfaction)
 
 	db := c.MustGet("db").(*gorm.DB)
 
@@ -30,5 +31,7 @@ func submitSatisfactionEndpoint(c *gin.Context) {
 
 	if result.Error != nil {
 		slog.Error("Welp, got error writing into the database")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database write error"})
+		return
 	}
 }
