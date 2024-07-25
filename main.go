@@ -7,8 +7,10 @@ import (
 
 	"log/slog"
 
+	"github.com/chenjiandongx/ginprom"
 	"github.com/Stogas/feedback-api/internal/config"
 	feedbacktypes "github.com/Stogas/feedback-api/internal/types"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 
@@ -28,19 +30,35 @@ func init() {
 func main() {
 	conf := config.New()
 
-	// Initialize tracer
-	tp, err := initTracer(conf.Tracing)
-	if err != nil {
-		slog.Error("failed to initialize tracer", "error", err)
-		panic("failed to initialize tracer")
-	}
-	// Clean up on shutdown
-	defer func() {
-		if err := tp.Shutdown(context.Background()); err != nil {
-			slog.Error("failed to shut down tracer", "error", err)
-			panic("failed to shut down tracer")
+	gin.SetMode(gin.ReleaseMode)
+
+	if conf.Tracing.Enabled {
+		// Initialize tracer
+		tp, err := initTracer(conf.Tracing)
+		if err != nil {
+			slog.Error("failed to initialize tracer", "error", err)
+			panic("failed to initialize tracer")
 		}
-	}()
+		// Clean up on shutdown
+		defer func() {
+			if err := tp.Shutdown(context.Background()); err != nil {
+				slog.Error("failed to shut down tracer", "error", err)
+				panic("failed to shut down tracer")
+			}
+		}()
+	}
+
+	if conf.Metrics.Enabled {
+		// metrics
+		rMetrics := gin.Default()
+		rMetrics.GET("/metrics", ginprom.PromHandler(promhttp.Handler()))
+		slog.Info("Starting Prometheus exporter", "host", conf.Metrics.Host, "port", conf.Metrics.Port)
+		go func() {
+			if err := rMetrics.Run(fmt.Sprintf("%s:%v", conf.Metrics.Host, conf.Metrics.Port)); err != nil {
+				slog.Error("Failed to run metrics exporter", "error", err)
+			}
+		}()
+		}
 
 	postgresConfig := postgres.New(postgres.Config{
 		DSN: fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC", conf.Database.Host, conf.Database.User, conf.Database.Password, conf.Database.Name, strconv.Itoa(conf.Database.Port)), // data source name, refer https://github.com/jackc/pgx
@@ -58,9 +76,17 @@ func main() {
 	}
 	db.AutoMigrate(&feedbacktypes.Satisfaction{})
 
+	if conf.API.Debug {
+		gin.SetMode(gin.DebugMode)
+	}
 	r := gin.Default()
 
-	r.Use(otelgin.Middleware("feedback-api"))
+	if conf.Tracing.Enabled {
+		r.Use(otelgin.Middleware("feedback-api"))
+	}
+	if conf.Metrics.Enabled {
+		r.Use(ginprom.PromMiddleware(nil))
+	}
 
 	r.GET("/ping", ping)
 
@@ -70,5 +96,6 @@ func main() {
 		rSubmit.POST("/satisfaction", submitSatisfactionEndpoint)
 	}
 
-	r.Run() // listen and serve on 0.0.0.0:8080
+	slog.Info("Starting API", "host", conf.API.Host, "port", conf.API.Port)
+	r.Run(fmt.Sprintf("%s:%v", conf.API.Host, conf.API.Port))
 }

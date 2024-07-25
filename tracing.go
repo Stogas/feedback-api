@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/Stogas/feedback-api/internal/config"
 
@@ -21,7 +20,7 @@ func initTracer(conf config.TraceConfig) (*trace.TracerProvider, error) {
 	exporter, err := otlptracegrpc.New(
 		ctx,
 		otlptracegrpc.WithInsecure(),
-		otlptracegrpc.WithEndpoint(fmt.Sprintf("%s:%s", conf.Host, strconv.Itoa(conf.Port))),
+		otlptracegrpc.WithEndpoint(fmt.Sprintf("%s:%v", conf.Host, conf.Port)),
 	)
 	if err != nil {
 		return nil, err
