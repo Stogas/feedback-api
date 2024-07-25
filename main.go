@@ -9,6 +9,7 @@ import (
 
 	"github.com/Stogas/feedback-api/internal/config"
 	feedbacktypes "github.com/Stogas/feedback-api/internal/types"
+	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 
 	"github.com/gin-gonic/gin"
@@ -51,6 +52,10 @@ func main() {
 		slog.Error("Failed to connect to database", "host", conf.Database.Host, "port", conf.Database.Port, "user", conf.Database.User, "database", conf.Database.Name)
     panic("failed to connect database")
   }
+	if err := db.Use(otelgorm.NewPlugin()); err != nil {
+		slog.Error("Failed to initialize GORM OTLP instrumentation", "error", err)
+		panic("failed to initialize GORM OTLP instrumentation")
+	}
 	db.AutoMigrate(&feedbacktypes.Satisfaction{})
 
 	r := gin.Default()
