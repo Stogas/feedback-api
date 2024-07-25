@@ -3,7 +3,8 @@
 
 Run PostgreSQL with:
 ```shell
-docker compose -f docker-compose.local.yaml up -d
+cd local-dev
+docker compose up -d
 ```
 
 PostgreSQL will be reachable at:

@@ -13,8 +13,14 @@ type DBConfig struct {
   Name string
 }
 
+type TraceConfig struct {
+  Host string
+  Port int
+}
+
 type Config struct {
   Database DBConfig
+  Tracing TraceConfig
 }
 
 func New() *Config {
@@ -25,6 +31,10 @@ func New() *Config {
         User: getEnvAsString("POSTGRES_USER", ""),
         Password: getEnvAsString("POSTGRES_PASSWORD", ""),
         Name: getEnvAsString("POSTGRES_DATABASE", ""),
+    },
+    Tracing: TraceConfig{
+      Host: getEnvAsString("OTLP_GRPC_HOST", "127.0.0.1"),
+      Port: getEnvAsInt("OTLP_GRPC_PORT", 4317),
     },
   }
 }
