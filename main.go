@@ -97,8 +97,8 @@ func main() {
 
 	rSubmit := r.Group("/submit")
 	rSubmit.Use(
-		DBMiddleware(db),
-		SatisfactionMiddleware,
+		dbMiddleware(db),
+		satisfactionMiddleware,
 	)
 	{
 		rSubmit.POST("/satisfaction", submitSatisfactionEndpoint)

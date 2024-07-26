@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func DBMiddleware(db *gorm.DB) gin.HandlerFunc {
+func dbMiddleware(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()
 		c.Set("db", db.WithContext(ctx))
@@ -16,7 +16,7 @@ func DBMiddleware(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
-func SatisfactionMiddleware(c *gin.Context) {
+func satisfactionMiddleware(c *gin.Context) {
 	var s feedbacktypes.Satisfaction
 
 	if err := c.ShouldBindJSON(&s); err != nil {
