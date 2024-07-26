@@ -4,6 +4,7 @@ import (
 	"log/slog"
 
 	"github.com/Stogas/feedback-api/internal/config"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -18,36 +19,44 @@ func init() {
 
 func main() {
 	conf := config.New()
+
 	gin.SetMode(gin.ReleaseMode)
+	var globalMiddlewares []gin.HandlerFunc
 
-	// logging
-	initLogger(conf.Logs)
-	var loggingMiddleware gin.HandlerFunc
-	if conf.Logs.JSON {
-		if conf.Tracing.Enabled {
-			loggingMiddleware = traceLogMiddleware()
-		} else {
-			loggingMiddleware = regularLogMiddleware()
-		}
-	} else {
-		loggingMiddleware = gin.Logger()
-	}
-
+	// tracing
 	if conf.Tracing.Enabled {
 		tracerClose := initTracer(conf.Tracing)
 		defer tracerClose()
+		globalMiddlewares = append(globalMiddlewares, otelgin.Middleware("feedback-api"))
 	}
 
-	rMetrics, p := initMetrics()
+	// logging
+	initLogger(conf.Logs)
+	var l gin.HandlerFunc
+	if conf.Logs.JSON {
+		if conf.Tracing.Enabled {
+			l = traceLogMiddleware()
+		} else {
+			l = regularLogMiddleware()
+		}
+	} else {
+		l = gin.Logger()
+	}
+	globalMiddlewares = append(globalMiddlewares, l)
+
+	// metrics
+	rMetrics, p := initMetrics(globalMiddlewares)
 	// start metrics listener in the background
 	go startMetrics(rMetrics, conf.Metrics)
+	globalMiddlewares = append(globalMiddlewares, p.Instrument())
 	// p.AddCustomCounter("satisfaction", "Counts how many good/bad satisfactions are received", []string{"satisfied"})
 
 	db := initDB(conf.Database, conf.Tracing.Enabled)
+	dbMiddleware := createDBMiddleware(db)
 
 	if conf.API.Debug {
 		gin.SetMode(gin.DebugMode)
 	}
 
-	startAPI(conf, loggingMiddleware, db, p)
+	startAPI(conf, globalMiddlewares, dbMiddleware)
 }

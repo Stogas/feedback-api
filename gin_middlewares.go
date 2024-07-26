@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func dbMiddleware(db *gorm.DB) gin.HandlerFunc {
+func createDBMiddleware(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()
 		c.Set("db", db.WithContext(ctx))

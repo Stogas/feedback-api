@@ -27,8 +27,9 @@ type TraceConfig struct {
 }
 
 type LogsConfig struct {
-	JSON  bool
-	Debug bool
+	JSON   bool
+	Debug  bool
+	Source bool
 }
 
 type Config struct {
@@ -64,8 +65,9 @@ func New() *Config {
 			Port:    getEnvAsInt("OTLP_GRPC_PORT", 4317),
 		},
 		Logs: LogsConfig{
-			JSON:  getEnvAsBool("LOGS_JSON", true),
-			Debug: getEnvAsBool("LOGS_DEBUG", false),
+			JSON:   getEnvAsBool("LOGS_JSON", true),
+			Debug:  getEnvAsBool("LOGS_DEBUG", false),
+			Source: getEnvAsBool("LOGS_SOURCE", false),
 		},
 		Metrics: MetricsConfig{
 			Host: getEnvAsString("METRICS_HOST", "0.0.0.0"),

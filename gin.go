@@ -10,30 +10,25 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Depado/ginprom"
 	"github.com/gin-gonic/gin"
 	"github.com/Stogas/feedback-api/internal/config"
-	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
-	"gorm.io/gorm"
 )
 
-func startAPI(conf *config.Config, logMiddleware gin.HandlerFunc, db *gorm.DB, p *ginprom.Prometheus) {
+func startAPI(conf *config.Config, globalMiddlewares []gin.HandlerFunc, dbMiddleware gin.HandlerFunc) {
 
 	r := gin.New()
+
 	r.Use(gin.Recovery())
-
-	if conf.Tracing.Enabled {
-		r.Use(otelgin.Middleware("feedback-api"))
+	for _, m := range globalMiddlewares {
+		// slog.Debug("Gin: Adding middleware")
+		r.Use(m)
 	}
-
-	r.Use(logMiddleware)
-	r.Use(p.Instrument())
 
 	r.GET("/ping", ping)
 
 	rSubmit := r.Group("/submit")
 	rSubmit.Use(
-		dbMiddleware(db),
+		dbMiddleware,
 		satisfactionMiddleware,
 	)
 	{

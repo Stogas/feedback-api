@@ -16,7 +16,7 @@ func initLogger(conf config.LogsConfig) {
 		level = slog.LevelDebug
 	}
 	opts := &slog.HandlerOptions{
-		AddSource: true,
+		AddSource: conf.Source,
 		Level:     level,
 	}
 

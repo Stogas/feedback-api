@@ -9,8 +9,14 @@ import (
 	"github.com/Stogas/feedback-api/internal/config"
 )
 
-func initMetrics() (*gin.Engine, *ginprom.Prometheus) {
-	r := gin.Default()
+func initMetrics(m []gin.HandlerFunc) (*gin.Engine, *ginprom.Prometheus) {
+	r := gin.New()
+
+	r.Use(gin.Recovery())
+	for _, m := range m {
+		// slog.Debug("Gin: Adding middleware")
+		r.Use(m)
+	}
 
 	p := ginprom.New(
 		ginprom.Engine(r),
