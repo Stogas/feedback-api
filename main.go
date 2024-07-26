@@ -6,22 +6,16 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
 	"time"
 
 	"log/slog"
 
 	"github.com/Stogas/feedback-api/internal/config"
-	feedbacktypes "github.com/Stogas/feedback-api/internal/types"
-	slogGorm "github.com/orandin/slog-gorm"
-	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 )
 
 func init() {
@@ -42,30 +36,12 @@ func main() {
 		defer tracerClose()
 	}
 
-	// metrics
 	rMetrics, p := initMetrics()
+	// start metrics listener in the background
 	go startMetrics(rMetrics, conf.Metrics)
 	// p.AddCustomCounter("satisfaction", "Counts how many good/bad satisfactions are received", []string{"satisfied"})
 
-	// Database
-	postgresConfig := postgres.New(postgres.Config{
-		DSN:                  fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC", conf.Database.Host, conf.Database.User, conf.Database.Password, conf.Database.Name, strconv.Itoa(conf.Database.Port)), // data source name, refer https://github.com/jackc/pgx
-		PreferSimpleProtocol: true,                                                                                                                                                                                                            // disables implicit prepared statement usage. By default pgx automatically uses the extended protocol
-	})
-
-	gormLogger := slogGorm.New()
-	db, err := gorm.Open(postgresConfig, &gorm.Config{
-		Logger: gormLogger,
-	})
-	if err != nil {
-		slog.Error("Failed to connect to database", "host", conf.Database.Host, "port", conf.Database.Port, "user", conf.Database.User, "database", conf.Database.Name)
-		panic("failed to connect database")
-	}
-	if err := db.Use(otelgorm.NewPlugin()); err != nil {
-		slog.Error("Failed to initialize GORM OTLP instrumentation", "error", err)
-		panic("failed to initialize GORM OTLP instrumentation")
-	}
-	db.AutoMigrate(&feedbacktypes.Satisfaction{})
+	db := initDB(conf.Database, conf.Tracing.Enabled)
 
 	if conf.API.Debug {
 		gin.SetMode(gin.DebugMode)
