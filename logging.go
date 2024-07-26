@@ -6,8 +6,13 @@ import (
 	"os"
 )
 
-func initLogger() {
-	handler := slog.NewJSONHandler(os.Stdout, nil)
+func initLogger(enableJSON bool) {
+	var handler slog.Handler
+	if enableJSON {
+		handler = slog.NewJSONHandler(os.Stdout, nil)
+	} else {
+		handler = slog.NewTextHandler(os.Stdout, nil)
+	}
 	slog.SetDefault(slog.New(handler))
 }
 
