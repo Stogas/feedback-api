@@ -25,4 +25,4 @@ Before commiting, make sure your code complies with `gofmt`:
 gofmt -d . # check what's wrong
 gofmt -w . # fix it
 ```
-TIP: automatic formatting is available in the vscode Go extension. Make sure to enable vscode's `editor.formatOnSave` feature to utilize this.
+TIP: automatic formatting is available in the vscode Go extension. Make sure to enable vscode's `editor.formatOnSave` feature to utilize this. Also, make sure to use the golang.go formatter (provided by the Go extension) instead of Prettier.
