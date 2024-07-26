@@ -35,7 +35,7 @@ func init() {
 func main() {
 	conf := config.New()
 
-	initLogger(conf.API.JSONlogging)
+	initLogger(conf.Logs)
 
 	gin.SetMode(gin.ReleaseMode)
 
@@ -90,7 +90,7 @@ func main() {
 		r.Use(otelgin.Middleware("feedback-api"))
 	}
 
-	if conf.API.JSONlogging {
+	if conf.Logs.JSON {
 		if conf.Tracing.Enabled {
 			r.Use(traceLogMiddleware())
 		} else {
@@ -142,6 +142,6 @@ func main() {
 	if err := srv.Shutdown(ctx); err != nil {
 		slog.Error("Error while shutting down API listener gracefully. Initiating force shutdown...", "error", err, "timeout", timeout)
 	} else {
-		slog.Info("API listener exiting")
+		slog.Info("API listener exited successfully")
 	}
 }

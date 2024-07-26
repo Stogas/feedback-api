@@ -26,10 +26,16 @@ type TraceConfig struct {
 	Port    int
 }
 
+type LogsConfig struct {
+	JSON  bool
+	Debug bool
+}
+
 type Config struct {
 	API      APIConfig
 	Database DBConfig
 	Tracing  TraceConfig
+	Logs     LogsConfig
 	Metrics  MetricsConfig
 }
 
@@ -41,10 +47,9 @@ type MetricsConfig struct {
 func New() *Config {
 	return &Config{
 		API: APIConfig{
-			Host:        getEnvAsString("API_LISTEN_HOST", "0.0.0.0"),
-			Port:        getEnvAsInt("API_LISTEN_PORT", 80),
-			Debug:       getEnvAsBool("API_DEBUG_MODE", false),
-			JSONlogging: getEnvAsBool("API_JSON_LOGS", true),
+			Host:  getEnvAsString("API_LISTEN_HOST", "0.0.0.0"),
+			Port:  getEnvAsInt("API_LISTEN_PORT", 80),
+			Debug: getEnvAsBool("API_DEBUG_MODE", false),
 		},
 		Database: DBConfig{
 			Host:     getEnvAsString("POSTGRES_HOST", "localhost"),
@@ -57,6 +62,10 @@ func New() *Config {
 			Enabled: getEnvAsBool("OTLP_TRACING_ENABLED", false),
 			Host:    getEnvAsString("OTLP_GRPC_HOST", "127.0.0.1"),
 			Port:    getEnvAsInt("OTLP_GRPC_PORT", 4317),
+		},
+		Logs: LogsConfig{
+			JSON:  getEnvAsBool("LOGS_JSON", true),
+			Debug: getEnvAsBool("LOGS_DEBUG", false),
 		},
 		Metrics: MetricsConfig{
 			Host: getEnvAsString("METRICS_HOST", "0.0.0.0"),

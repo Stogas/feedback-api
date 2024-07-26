@@ -47,10 +47,11 @@ func initTracer(conf config.TraceConfig) func() {
 	otel.SetTracerProvider(tp)
 
 	return func() {
-		slog.Info("Shutting down OTLP trace provider ...")
+		slog.Debug("Shutting down OTLP trace provider ...")
 		if err := tp.Shutdown(context.Background()); err != nil {
 			slog.Error("failed to shut down tracer", "error", err)
 			panic("failed to shut down tracer")
 		}
+		slog.Debug("OTLP trace provider exited successfully")
 	}
 }
