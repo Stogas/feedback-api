@@ -15,6 +15,7 @@ import (
 	"github.com/Depado/ginprom"
 	"github.com/Stogas/feedback-api/internal/config"
 	feedbacktypes "github.com/Stogas/feedback-api/internal/types"
+	sloggin "github.com/samber/slog-gin"
 	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 
@@ -52,6 +53,19 @@ func main() {
 		}()
 	}
 
+	var logger *slog.Logger
+	var loggerConfig sloggin.Config
+	if conf.API.JSONlogging {
+		logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+		loggerConfig = sloggin.Config{
+			WithSpanID:       true,
+			WithTraceID:      true,
+			DefaultLevel:     slog.LevelInfo,
+			ClientErrorLevel: slog.LevelWarn,
+			ServerErrorLevel: slog.LevelError,
+		}
+	}
+
 	// metrics
 	rMetrics := gin.Default()
 	p := ginprom.New(
@@ -86,7 +100,14 @@ func main() {
 	if conf.API.Debug {
 		gin.SetMode(gin.DebugMode)
 	}
-	r := gin.Default()
+
+	r := gin.New()
+	r.Use(gin.Recovery())
+	if conf.API.JSONlogging {
+		r.Use(sloggin.NewWithConfig(logger, loggerConfig))
+	} else {
+		r.Use(gin.Logger())
+	}
 	r.Use(p.Instrument())
 
 	if conf.Tracing.Enabled {
