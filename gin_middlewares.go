@@ -20,10 +20,10 @@ func SatisfactionMiddleware(c *gin.Context) {
 	var s feedbacktypes.Satisfaction
 
 	if err := c.ShouldBindJSON(&s); err != nil {
-    // If there's an error in parsing JSON, return an error response
+		// If there's an error in parsing JSON, return an error response
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
-  }
+	}
 
 	if s.Satisfied == nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Field 'satisfied' not provided"})

@@ -17,11 +17,11 @@ func ping(c *gin.Context) {
 
 func submitSatisfactionEndpoint(c *gin.Context) {
 	// if err := c.ShouldBindJSON(&newSatisfaction); err != nil {
-  //   // If there's an error in parsing JSON, return an error response
-  //   c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	//   // If there's an error in parsing JSON, return an error response
+	//   c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	// 	slog.Warn("Error parsing submitted JSON", "error", err)
-  //   return
-  // }
+	//   return
+	// }
 
 	newSatisfaction := c.MustGet("satisfaction").(feedbacktypes.Satisfaction)
 

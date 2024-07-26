@@ -19,3 +19,10 @@ Run app with:
 ```shell
 go run main.go
 ```
+
+Before commiting, make sure your code complies with `gofmt`:
+```shell
+gofmt -d . # check what's wrong
+gofmt -w . # fix it
+```
+TIP: automatic formatting is available in the vscode Go extension. Make sure to enable vscode's `editor.formatOnSave` feature to utilize this.
