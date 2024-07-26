@@ -52,6 +52,10 @@ func startAPI(conf *config.Config, globalMiddlewares []gin.HandlerFunc, dbMiddle
 		}
 	}()
 
+	apiGracefulShutdown(srv)
+}
+
+func apiGracefulShutdown(srv *http.Server) {
 	// Graceful shutdown
 	// Wait for interrupt signal to gracefully shutdown the server with timeout
 	timeout := 5 * time.Second
@@ -59,7 +63,7 @@ func startAPI(conf *config.Config, globalMiddlewares []gin.HandlerFunc, dbMiddle
 
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	slog.Info("Shutting down API listener ...")
+	slog.Info("Shutting down API listener ...", "timeout", timeout)
 
 	// timeout of 5 seconds
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
