@@ -12,7 +12,6 @@ import (
 
 	"log/slog"
 
-	"github.com/Depado/ginprom"
 	"github.com/Stogas/feedback-api/internal/config"
 	feedbacktypes "github.com/Stogas/feedback-api/internal/types"
 	slogGorm "github.com/orandin/slog-gorm"
@@ -36,7 +35,6 @@ func main() {
 	conf := config.New()
 
 	initLogger(conf.Logs)
-
 	gin.SetMode(gin.ReleaseMode)
 
 	if conf.Tracing.Enabled {
@@ -45,18 +43,8 @@ func main() {
 	}
 
 	// metrics
-	rMetrics := gin.Default()
-	p := ginprom.New(
-		ginprom.Engine(rMetrics),
-		ginprom.Subsystem("feedbackapi"),
-		ginprom.Path("/metrics"),
-	)
-	slog.Info("Starting Prometheus exporter", "host", conf.Metrics.Host, "port", conf.Metrics.Port)
-	go func() {
-		if err := rMetrics.Run(fmt.Sprintf("%s:%v", conf.Metrics.Host, conf.Metrics.Port)); err != nil {
-			slog.Error("Failed to run metrics exporter", "error", err)
-		}
-	}()
+	rMetrics, p := initMetrics()
+	go startMetrics(rMetrics, conf.Metrics)
 	// p.AddCustomCounter("satisfaction", "Counts how many good/bad satisfactions are received", []string{"satisfied"})
 
 	// Database
