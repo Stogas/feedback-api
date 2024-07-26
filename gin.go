@@ -15,6 +15,9 @@ import (
 )
 
 func startAPI(conf *config.Config, globalMiddlewares []gin.HandlerFunc, dbMiddleware gin.HandlerFunc) {
+	if conf.API.Debug {
+		gin.SetMode(gin.DebugMode)
+	}
 
 	r := gin.New()
 

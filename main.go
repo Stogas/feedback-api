@@ -51,12 +51,9 @@ func main() {
 	globalMiddlewares = append(globalMiddlewares, p.Instrument())
 	// p.AddCustomCounter("satisfaction", "Counts how many good/bad satisfactions are received", []string{"satisfied"})
 
+	// database
 	db := initDB(conf.Database, conf.Tracing.Enabled)
 	dbMiddleware := createDBMiddleware(db)
-
-	if conf.API.Debug {
-		gin.SetMode(gin.DebugMode)
-	}
 
 	startAPI(conf, globalMiddlewares, dbMiddleware)
 }
