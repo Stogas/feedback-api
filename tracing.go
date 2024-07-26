@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/Stogas/feedback-api/internal/config"
 
@@ -13,7 +14,7 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 )
 
-func initTracer(conf config.TraceConfig) (*trace.TracerProvider, error) {
+func initTracer(conf config.TraceConfig) func() {
 	ctx := context.Background()
 
 	// GRPC Exporter
@@ -23,7 +24,8 @@ func initTracer(conf config.TraceConfig) (*trace.TracerProvider, error) {
 		otlptracegrpc.WithEndpoint(fmt.Sprintf("%s:%v", conf.Host, conf.Port)),
 	)
 	if err != nil {
-		return nil, err
+		slog.Error("failed to initialize tracer", "error", err)
+		panic("failed to initialize tracer")
 	}
 
 	// HTTP Exporter
@@ -43,5 +45,12 @@ func initTracer(conf config.TraceConfig) (*trace.TracerProvider, error) {
 	)
 
 	otel.SetTracerProvider(tp)
-	return tp, nil
+
+	return func() {
+		slog.Info("Shutting down OTLP trace provider ...")
+		if err := tp.Shutdown(context.Background()); err != nil {
+			slog.Error("failed to shut down tracer", "error", err)
+			panic("failed to shut down tracer")
+		}
+	}
 }

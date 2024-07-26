@@ -40,19 +40,8 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 
 	if conf.Tracing.Enabled {
-		// Initialize tracer
-		tp, err := initTracer(conf.Tracing)
-		if err != nil {
-			slog.Error("failed to initialize tracer", "error", err)
-			panic("failed to initialize tracer")
-		}
-		// Clean up on shutdown
-		defer func() {
-			if err := tp.Shutdown(context.Background()); err != nil {
-				slog.Error("failed to shut down tracer", "error", err)
-				panic("failed to shut down tracer")
-			}
-		}()
+		tracerClose := initTracer(conf.Tracing)
+		defer tracerClose()
 	}
 
 	// metrics
