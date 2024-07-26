@@ -41,11 +41,25 @@ func satisfactionMiddleware(c *gin.Context) {
 
 func regularLogMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		start := time.Now()
+
+		// Create a logger without trace/span IDs
+		logger := slog.Default()
+
 		// Store the default logger in the request context
-		ctx := context.WithValue(c.Request.Context(), "logger", slog.Default())
+		ctx := context.WithValue(c.Request.Context(), "logger", logger)
 		c.Request = c.Request.WithContext(ctx)
 
+		// Process request
 		c.Next()
+
+		// Log request details
+		logger.Info("Request",
+			"method", c.Request.Method,
+			"path", c.Request.URL.Path,
+			"status", c.Writer.Status(),
+			"latency", time.Since(start),
+		)
 	}
 }
 
