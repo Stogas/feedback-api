@@ -15,7 +15,6 @@ import (
 	"github.com/Depado/ginprom"
 	"github.com/Stogas/feedback-api/internal/config"
 	feedbacktypes "github.com/Stogas/feedback-api/internal/types"
-	sloggin "github.com/samber/slog-gin"
 	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 
@@ -35,6 +34,10 @@ func init() {
 func main() {
 	conf := config.New()
 
+	if conf.API.JSONlogging {
+		initLogger()
+	}
+
 	gin.SetMode(gin.ReleaseMode)
 
 	if conf.Tracing.Enabled {
@@ -51,19 +54,6 @@ func main() {
 				panic("failed to shut down tracer")
 			}
 		}()
-	}
-
-	var logger *slog.Logger
-	var loggerConfig sloggin.Config
-	if conf.API.JSONlogging {
-		logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
-		loggerConfig = sloggin.Config{
-			WithSpanID:       true,
-			WithTraceID:      true,
-			DefaultLevel:     slog.LevelInfo,
-			ClientErrorLevel: slog.LevelWarn,
-			ServerErrorLevel: slog.LevelError,
-		}
 	}
 
 	// metrics
@@ -103,16 +93,21 @@ func main() {
 
 	r := gin.New()
 	r.Use(gin.Recovery())
-	if conf.API.JSONlogging {
-		r.Use(sloggin.NewWithConfig(logger, loggerConfig))
-	} else {
-		r.Use(gin.Logger())
-	}
-	r.Use(p.Instrument())
 
 	if conf.Tracing.Enabled {
 		r.Use(otelgin.Middleware("feedback-api"))
 	}
+
+	if conf.API.JSONlogging {
+		if conf.Tracing.Enabled {
+			r.Use(traceLogMiddleware())
+		} else {
+			r.Use(regularLogMiddleware())
+		}
+	} else {
+		r.Use(gin.Logger())
+	}
+	r.Use(p.Instrument())
 
 	r.GET("/ping", ping)
 

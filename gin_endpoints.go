@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -23,7 +22,8 @@ func submitSatisfactionEndpoint(c *gin.Context) {
 	result := db.Create(&newSatisfaction)
 
 	if result.Error != nil {
-		slog.Error("Welp, got error writing into the database")
+		logger := getLogger(c.Request.Context())
+		logger.Error("Welp, got error writing into the database", "error", result.Error)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database write error"})
 		return
 	}
