@@ -7,14 +7,16 @@ import (
 
 	"github.com/Stogas/feedback-api/internal/config"
 
+	"go.opentelemetry.io/contrib/propagators/b3"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 )
 
-func initTracer(conf config.TraceConfig) func() {
+func initTracer(conf config.TraceConfig) (func(), propagation.TextMapPropagator) {
 	ctx := context.Background()
 
 	// GRPC Exporter
@@ -44,6 +46,9 @@ func initTracer(conf config.TraceConfig) func() {
 		)),
 	)
 
+	b3Propagator := b3.New()
+	otel.SetTextMapPropagator(b3Propagator)
+
 	otel.SetTracerProvider(tp)
 
 	return func() {
@@ -53,5 +58,5 @@ func initTracer(conf config.TraceConfig) func() {
 			panic("failed to shut down tracer")
 		}
 		slog.Debug("OTLP trace provider exited successfully")
-	}
+	}, b3Propagator
 }

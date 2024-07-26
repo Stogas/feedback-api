@@ -25,9 +25,9 @@ func main() {
 
 	// tracing
 	if conf.Tracing.Enabled {
-		tracerClose := initTracer(conf.Tracing)
+		tracerClose, b3 := initTracer(conf.Tracing)
 		defer tracerClose()
-		globalMiddlewares = append(globalMiddlewares, otelgin.Middleware("feedback-api"))
+		globalMiddlewares = append(globalMiddlewares, otelgin.Middleware("feedback-api", otelgin.WithPropagators(b3)))
 	}
 
 	// logging

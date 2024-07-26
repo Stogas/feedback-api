@@ -49,6 +49,7 @@ require (
 	github.com/uptrace/opentelemetry-go-extra/otelgorm v0.3.1 // indirect
 	github.com/uptrace/opentelemetry-go-extra/otelsql v0.3.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin v0.53.0 // indirect
+	go.opentelemetry.io/contrib/propagators/b3 v1.28.0 // indirect
 	go.opentelemetry.io/otel v1.28.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.28.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.28.0 // indirect
