@@ -7,6 +7,6 @@ import (
 
 type Satisfaction struct {
 	gorm.Model
-	UUID      uuid.UUID `json:"uuid_v4" binding:"required" gorm:"uniqueIndex"`
+	UUID      uuid.UUID `json:"uuid" binding:"required" gorm:"uniqueIndex"`
 	Satisfied *bool     `json:"satisfied" binding:"required"`
 }

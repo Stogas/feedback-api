@@ -37,6 +37,7 @@ func startAPI(conf config.APIConfig, globalMiddlewares []gin.HandlerFunc, dbMidd
 	)
 	{
 		rSubmit.POST("/satisfaction", submitSatisfactionEndpoint)
+		rSubmit.PATCH("/satisfaction", updateSatisfactionEndpoint)
 	}
 
 	slog.Info("Starting API", "host", conf.Host, "port", conf.Port)
