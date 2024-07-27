@@ -1,31 +1,23 @@
+# Feedback-api
 
-### Local development
+Feedback API is a RESTful Go API allowing submission and updates to a user's satisfaction report for other apps.
 
-Run PostgreSQL with:
-```shell
-cd local-dev
-docker compose up -d
-```
+The main goal is to be simple and allow partial submittions (i.e. without further comments), if a user decides to abandon the process in the middle of the report.
 
-PostgreSQL will be reachable at:
-```
-localhost:5432
-user: test
-password: test
-database: test
-```
+Thus, the first request by the front-end must be a POST with a newly generated UUID, and subsequent requests must be of type PATCH with the same UUID - more details below.
 
-Run app with:
-```shell
-go run main.go
-```
+HTTP header `X-Feedback-Submit-Token` is a very rudimentary approach to prevent random submissions - this token should be known to your frontend, and as such, should not be considered a "secret". If necessary, one can rotate this token with every frontend update/deployment.
 
-Before commiting, make sure your code complies with `gofmt`:
-```shell
-gofmt -d . # check what's wrong
-gofmt -w . # fix it
-```
-TIP: automatic formatting is available in the vscode Go extension. Make sure to enable vscode's `editor.formatOnSave` feature to utilize this. Also, make sure to use the golang.go formatter (provided by the Go extension) instead of Prettier.
+A secondary goal is to be a generic Feedback API, i.e. allow this to be used in a variety of projects. For some needs, it might be required to allow submissions from authenticated users only. Thus, this project *might* implement optional JWT token validation instead of the well-known Submit Token later on.
+
+## Features
+
+- JSON logs enabled by default (set `LOGS_JSON=false` to disable)
+- Rudimentary OpenTelemetry tracing and exporting via OTLP gRPC
+- Prometheus metrics (exported by default on `0.0.0.0:2222/metrics`) for HTTP and satisfaction values
+- PostgreSQL as database (can be modified to support [other GORM DBs](https://gorm.io/docs/connecting_to_the_database.html))
+- Automatic unexpected panic recovery (via the `gin.Recovery()` middleware)
+- Automatic recovery after DB downtime
 
 ## Usage
 
@@ -34,7 +26,7 @@ To create a new satisfaction report, submit this:
 ```
 POST /submit/satisfaction
 
-headers:
+HTTP headers:
 X-Feedback-Submit-Token: <value of API_SUBMIT_TOKEN>
 
 payload:
@@ -49,7 +41,7 @@ To update a satisfaction report, submit this:
 ```
 PATCH /submit/satisfaction
 
-headers:
+HTTP headers:
 X-Feedback-Submit-Token: <value of API_SUBMIT_TOKEN>
 
 payload:
@@ -65,3 +57,40 @@ Rules:
 - Trying to POST without either `.satisfied` or `.uuid` will return `HTTP 400 Bad Request`
 - Trying to POST with an *existing* `.uuid` will return `HTTP 409 Conflict`
 - Trying to PATCH with a *new* `.uuid` will return `HTTP 404 Not Found`
+
+## Local development
+
+Run PostgreSQL, Grafana Tempo & Grafana with:
+```shell
+cd local-dev
+docker compose up -d
+```
+
+Run app with the default Environment Variables and credentials (found in `.env`):
+```shell
+go run main.go
+```
+
+### Linting & formatting style
+
+Code must comply with the [configured linters](.golangci.yaml) in `golangci-lint`.
+
+#### Linting
+
+To integrate linting into your IDE, follow [instructions here](https://golangci-lint.run/welcome/integrations/#editor-integration).
+
+For VSCode users, install the [Go extension](https://marketplace.visualstudio.com/items?itemName=golang.Go), and configure `go.lintTool` with `golangci-lint` and `go.lintFlags` with `["--fast"]`. VSCode will promt you to install `golangci-lint` automatically.
+
+For non-IDE users, `golangci-lint` can be installed with [these instructions](https://golangci-lint.run/welcome/install/#local-installation), and then run with `golangci-lint run`.
+
+#### Formatting
+
+Code must follow `gofmt` and `goimports` formatting conventions. For ease of use in IDEs, the `gopls` language server covers these rules.
+
+For VSCode users, install the [Go extension](https://marketplace.visualstudio.com/items?itemName=golang.Go), select `default` in `go.formatTool`, which will use `gopls`. Make sure `go.useLanguageServer` and `editor.formatOnSave` are enabled (they are by default).
+
+For non-IDE users, run `gofmt` and `goimports` manually:
+```shell
+gofmt -d . # check what's wrong
+gofmt -w . # fix it
+```

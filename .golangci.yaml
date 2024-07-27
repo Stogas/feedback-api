@@ -1,0 +1,43 @@
+linters:
+  enable:
+    # enabled by default
+    - errcheck # Errcheck is a program for checking for unchecked errors in Go code. These unchecked errors can be critical bugs in some cases.
+    - gosimple # Linter for Go source code that specializes in simplifying code.
+    - govet # Vet examines Go source code and reports suspicious constructs. It is roughly the same as 'go vet' and uses its passes.
+    - ineffassign # Detects when assignments to existing variables are not used.
+    - staticcheck # It's a set of rules from staticcheck. It's not the same thing as the staticcheck binary.
+    - unused # Checks Go code for unused constants, variables, functions and types.
+    # additional
+    - goimports # Check import statements are formatted according to the 'goimport' command. Reformat imports in autofix mode.
+    - misspell # Finds commonly misspelled English words.
+    - sloglint # Ensure consistent code style when using log/slog.
+    - godox # Tool for detection of FIXME, TODO and other comment keywords.
+    - funlen # Tool for detection of long functions.
+    - gocognit # Computes and checks the cognitive complexity of functions.
+linters-settings:
+  sloglint:
+    no-mixed-args: true
+    kv-only: true
+    attr-only: false
+    no-global: ""
+    context: "scope"
+    static-msg: true
+    no-raw-keys: false
+    key-naming-case: snake
+    forbidden-keys:
+      - time
+      - level
+      - msg
+      - source
+    args-on-sep-lines: false
+  godox:
+    keywords:
+      - TODO
+      - BUG
+      - FIXME
+  funlen:
+    lines: 60
+    statements: 40
+    ignore-comments: false
+  gocognit:
+    min-complexity: 20
