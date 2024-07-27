@@ -4,8 +4,10 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"time"
 
+	"github.com/Depado/ginprom"
 	"github.com/gin-gonic/gin"
 	feedbacktypes "github.com/Stogas/feedback-api/internal/types"
 	"go.opentelemetry.io/otel/trace"
@@ -16,6 +18,14 @@ func createDBMiddleware(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()
 		c.Set("db", db.WithContext(ctx))
+		c.Next()
+	}
+}
+
+func metricsMiddleware(p *ginprom.Prometheus) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Store the prometheus client to allow using custom metrics
+		c.Set("prom", p)
 		c.Next()
 	}
 }
@@ -37,6 +47,16 @@ func satisfactionMiddleware(c *gin.Context) {
 	c.Set("satisfaction", s)
 
 	c.Next()
+
+	ctx := c.Request.Context()
+	statusCode := c.Writer.Status()
+	if statusCode >= 200 && statusCode < 300 {
+		slog.DebugContext(ctx, "Response will be a success, will increment metrics")
+		p := c.MustGet("prom").(*ginprom.Prometheus)
+		p.IncrementCounterValue("satisfaction", []string{strconv.FormatBool(*s.Satisfied)})
+	} else {
+		slog.DebugContext(ctx, "Response will not be a success, skipping metrics increment")
+	}
 }
 
 func regularLogMiddleware() gin.HandlerFunc {

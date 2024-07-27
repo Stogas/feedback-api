@@ -48,8 +48,7 @@ func main() {
 	rMetrics, p := initMetrics(globalMiddlewares)
 	// start metrics listener in the background
 	go startMetrics(rMetrics, conf.Metrics)
-	globalMiddlewares = append(globalMiddlewares, p.Instrument())
-	// p.AddCustomCounter("satisfaction", "Counts how many good/bad satisfactions are received", []string{"satisfied"})
+	globalMiddlewares = append(globalMiddlewares, p.Instrument(), metricsMiddleware(p))
 
 	// database
 	db := initDB(conf.Database, conf.Tracing.Enabled)
