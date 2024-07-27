@@ -17,13 +17,26 @@ func ping(c *gin.Context) {
 func submitSatisfactionEndpoint(c *gin.Context) {
 	newSatisfaction := c.MustGet("satisfaction").(feedbacktypes.Satisfaction)
 
+	logger := getLogger(c.Request.Context())
+
 	db := c.MustGet("db").(*gorm.DB)
+
+	var existingSatisfaction feedbacktypes.Satisfaction
+	existingRow := db.Where("uuid = ?", newSatisfaction.UUID).First(&existingSatisfaction)
+	if existingRow.Error == nil {
+		logger.Warn("A submission with this UUID already exists", "uuid", newSatisfaction.UUID, "method", c.Request.Method)
+		c.JSON(http.StatusConflict, gin.H{"error": "A submission with this UUID already exists", "uuid": newSatisfaction.UUID, "created_at": existingSatisfaction.CreatedAt})
+		return
+	} else if existingRow.Error != gorm.ErrRecordNotFound {
+		logger.Error("Error reading database", "error", existingRow.Error, "uuid", newSatisfaction.UUID)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database read error"})
+		return
+	}
 
 	result := db.Create(&newSatisfaction)
 
 	if result.Error != nil {
-		logger := getLogger(c.Request.Context())
-		logger.Error("Welp, got error writing into the database", "error", result.Error)
+		logger.Error("Database write error", "error", result.Error)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database write error"})
 		return
 	}

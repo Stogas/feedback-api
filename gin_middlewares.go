@@ -50,6 +50,7 @@ func satisfactionMiddleware(c *gin.Context) {
 		return
 	}
 
+	// special handling for booleans, as it's necessary to detect if it was not provided (default value for booleans is False)
 	if s.Satisfied == nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Field 'satisfied' not provided"})
 		return
@@ -60,14 +61,14 @@ func satisfactionMiddleware(c *gin.Context) {
 	c.Next()
 
 	if c.Request.Method == "POST" {
-		ctx := c.Request.Context()
+		logger := getLogger(c.Request.Context())
 		statusCode := c.Writer.Status()
 		if statusCode >= 200 && statusCode < 300 {
-			slog.DebugContext(ctx, "Response will be a success, will increment metrics")
+			logger.Debug("Response will be a success, will increment metrics")
 			p := c.MustGet("prom").(*ginprom.Prometheus)
 			p.IncrementCounterValue("satisfaction", []string{strconv.FormatBool(*s.Satisfied)})
 		} else {
-			slog.DebugContext(ctx, "Response will not be a success, skipping metrics increment")
+			logger.Debug("Response will not be a success, skipping metrics increment")
 		}
 	}
 }
