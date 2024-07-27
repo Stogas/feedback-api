@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 
@@ -8,6 +9,7 @@ import (
 	feedbacktypes "github.com/Stogas/feedback-api/internal/types"
 	slogGorm "github.com/orandin/slog-gorm"
 	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
+	"go.opentelemetry.io/otel"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -47,10 +49,21 @@ func initDB(conf config.DBConfig, tracing bool) *gorm.DB {
 		}
 	}
 
-	// apply migrations
-	db.AutoMigrate(
+	// apply migrations within a trace context
+	ctx, span := otel.Tracer("GORM-auto-migrations").Start(context.WithValue(context.Background(), "operation", "GORM-auto-migrations"), "Run DB migrations")
+	logger := slog.With("traceID", span.SpanContext().TraceID(), "spanID", span.SpanContext().SpanID())
+	logger.Info("Running DB migrations ...")
+	mErr := db.WithContext(ctx).AutoMigrate(
 		&feedbacktypes.Satisfaction{},
 	)
+	if mErr != nil {
+		span.RecordError(mErr)
+		logger.Error("DB Migrations failed", "error", mErr)
+		span.End()
+		panic("DB migrations failed")
+	}
+	logger.Info("DB Migrations succeeded!")
+	span.End()
 
 	return db
 }
