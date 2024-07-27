@@ -27,4 +27,6 @@ func submitSatisfactionEndpoint(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database write error"})
 		return
 	}
+
+	c.JSON(http.StatusCreated, gin.H{"created_at": newSatisfaction.CreatedAt})
 }
