@@ -14,8 +14,8 @@ import (
 	"github.com/Stogas/feedback-api/internal/config"
 )
 
-func startAPI(conf *config.Config, globalMiddlewares []gin.HandlerFunc, dbMiddleware gin.HandlerFunc) {
-	if conf.API.Debug {
+func startAPI(conf config.APIConfig, globalMiddlewares []gin.HandlerFunc, dbMiddleware gin.HandlerFunc) {
+	if conf.Debug {
 		gin.SetMode(gin.DebugMode)
 	}
 
@@ -31,6 +31,7 @@ func startAPI(conf *config.Config, globalMiddlewares []gin.HandlerFunc, dbMiddle
 
 	rSubmit := r.Group("/submit")
 	rSubmit.Use(
+		submitTokenMiddleware(conf.SubmitToken),
 		dbMiddleware,
 		satisfactionMiddleware,
 	)
@@ -38,10 +39,10 @@ func startAPI(conf *config.Config, globalMiddlewares []gin.HandlerFunc, dbMiddle
 		rSubmit.POST("/satisfaction", submitSatisfactionEndpoint)
 	}
 
-	slog.Info("Starting API", "host", conf.API.Host, "port", conf.API.Port)
+	slog.Info("Starting API", "host", conf.Host, "port", conf.Port)
 
 	srv := &http.Server{
-		Addr:    fmt.Sprintf("%s:%v", conf.API.Host, conf.API.Port),
+		Addr:    fmt.Sprintf("%s:%v", conf.Host, conf.Port),
 		Handler: r.Handler(),
 	}
 	// Initializing the server in a goroutine so that

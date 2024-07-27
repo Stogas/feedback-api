@@ -10,6 +10,7 @@ type APIConfig struct {
 	Port        int
 	Debug       bool
 	JSONlogging bool
+	SubmitToken string
 }
 
 type DBConfig struct {
@@ -48,9 +49,10 @@ type MetricsConfig struct {
 func New() *Config {
 	return &Config{
 		API: APIConfig{
-			Host:  getEnvAsString("API_LISTEN_HOST", "0.0.0.0"),
-			Port:  getEnvAsInt("API_LISTEN_PORT", 80),
-			Debug: getEnvAsBool("API_DEBUG_MODE", false),
+			Host:        getEnvAsString("API_LISTEN_HOST", "0.0.0.0"),
+			Port:        getEnvAsInt("API_LISTEN_PORT", 80),
+			Debug:       getEnvAsBool("API_DEBUG_MODE", false),
+			SubmitToken: getEnvAsString("API_SUBMIT_TOKEN", "test"),
 		},
 		Database: DBConfig{
 			Host:     getEnvAsString("POSTGRES_HOST", "localhost"),

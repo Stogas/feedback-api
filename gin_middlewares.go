@@ -30,6 +30,17 @@ func metricsMiddleware(p *ginprom.Prometheus) gin.HandlerFunc {
 	}
 }
 
+func submitTokenMiddleware(token string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if c.GetHeader("X-Feedback-Submit-Token") == token {
+			c.Next()
+		} else {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "X-Feedback-Submit-Token not provided or incorrect"})
+			return
+		}
+	}
+}
+
 func satisfactionMiddleware(c *gin.Context) {
 	var s feedbacktypes.Satisfaction
 
@@ -48,14 +59,16 @@ func satisfactionMiddleware(c *gin.Context) {
 
 	c.Next()
 
-	ctx := c.Request.Context()
-	statusCode := c.Writer.Status()
-	if statusCode >= 200 && statusCode < 300 {
-		slog.DebugContext(ctx, "Response will be a success, will increment metrics")
-		p := c.MustGet("prom").(*ginprom.Prometheus)
-		p.IncrementCounterValue("satisfaction", []string{strconv.FormatBool(*s.Satisfied)})
-	} else {
-		slog.DebugContext(ctx, "Response will not be a success, skipping metrics increment")
+	if c.Request.Method == "POST" {
+		ctx := c.Request.Context()
+		statusCode := c.Writer.Status()
+		if statusCode >= 200 && statusCode < 300 {
+			slog.DebugContext(ctx, "Response will be a success, will increment metrics")
+			p := c.MustGet("prom").(*ginprom.Prometheus)
+			p.IncrementCounterValue("satisfaction", []string{strconv.FormatBool(*s.Satisfied)})
+		} else {
+			slog.DebugContext(ctx, "Response will not be a success, skipping metrics increment")
+		}
 	}
 }
 

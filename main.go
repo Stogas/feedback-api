@@ -54,5 +54,5 @@ func main() {
 	db := initDB(conf.Database, conf.Tracing.Enabled)
 	dbMiddleware := createDBMiddleware(db)
 
-	startAPI(conf, globalMiddlewares, dbMiddleware)
+	startAPI(conf.API, globalMiddlewares, dbMiddleware)
 }
