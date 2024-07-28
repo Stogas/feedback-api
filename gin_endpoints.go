@@ -3,8 +3,8 @@ package main
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	feedbacktypes "github.com/Stogas/feedback-api/internal/types"
+	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 

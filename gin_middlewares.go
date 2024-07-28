@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/Depado/ginprom"
-	"github.com/gin-gonic/gin"
 	feedbacktypes "github.com/Stogas/feedback-api/internal/types"
+	"github.com/gin-gonic/gin"
 	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
 )
@@ -66,7 +66,10 @@ func satisfactionMiddleware(c *gin.Context) {
 		if statusCode >= 200 && statusCode < 300 {
 			logger.Debug("Response will be a success, will increment metrics")
 			p := c.MustGet("prom").(*ginprom.Prometheus)
-			p.IncrementCounterValue("satisfaction", []string{strconv.FormatBool(*s.Satisfied)})
+			err := p.IncrementCounterValue("satisfaction", []string{strconv.FormatBool(*s.Satisfied)})
+			if err != nil {
+				logger.Error("Failed to increment metrics counter")
+			}
 		} else {
 			logger.Debug("Response will not be a success, skipping metrics increment")
 		}
@@ -81,7 +84,7 @@ func regularLogMiddleware() gin.HandlerFunc {
 		logger := slog.Default()
 
 		// Store the default logger in the request context
-		ctx := context.WithValue(c.Request.Context(), "logger", logger)
+		ctx := context.WithValue(c.Request.Context(), contextLogger, logger)
 		c.Request = c.Request.WithContext(ctx)
 
 		// Process request
@@ -109,23 +112,21 @@ func traceLogMiddleware() gin.HandlerFunc {
 		spanID := span.SpanContext().SpanID().String()
 
 		// Create a logger with trace/span IDs
-		logger := slog.With("traceID", traceID, "spanID", spanID)
+		logger := slog.With("traceId", traceID, "spanId", spanID)
 
 		// Store the logger in the request context
-		ctx := context.WithValue(c.Request.Context(), "logger", logger)
+		ctx := context.WithValue(c.Request.Context(), contextLogger, logger)
 		c.Request = c.Request.WithContext(ctx)
 
 		// Process request
 		c.Next()
 
 		// Log request details
-		logger.Info("Request",
+		logger.Info("request",
 			"method", c.Request.Method,
 			"path", c.Request.URL.Path,
 			"status", c.Writer.Status(),
 			"latency", time.Since(start),
-			"traceID", traceID,
-			"spanID", spanID,
 		)
 	}
 }

@@ -23,7 +23,7 @@ linters-settings:
     context: "scope"
     static-msg: true
     no-raw-keys: false
-    key-naming-case: snake
+    key-naming-case: camel
     forbidden-keys:
       - time
       - level

@@ -28,8 +28,10 @@ func initLogger(conf config.LogsConfig) {
 	slog.SetDefault(slog.New(handler))
 }
 
+var contextLogger = slog.Logger{}
+
 func getLogger(ctx context.Context) *slog.Logger {
-	if logger, ok := ctx.Value("logger").(*slog.Logger); ok {
+	if logger, ok := ctx.Value(contextLogger).(*slog.Logger); ok {
 		return logger
 	}
 	return slog.Default()

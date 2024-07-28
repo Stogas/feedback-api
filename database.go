@@ -50,8 +50,8 @@ func initDB(conf config.DBConfig, tracing bool) *gorm.DB {
 	}
 
 	// apply migrations within a trace context
-	ctx, span := otel.Tracer("GORM-auto-migrations").Start(context.WithValue(context.Background(), "operation", "GORM-auto-migrations"), "Run DB migrations")
-	logger := slog.With("traceID", span.SpanContext().TraceID(), "spanID", span.SpanContext().SpanID())
+	ctx, span := otel.Tracer("GORM-auto-migrations").Start(context.Background(), "Run DB migrations")
+	logger := slog.With("traceId", span.SpanContext().TraceID(), "spanId", span.SpanContext().SpanID())
 	logger.Info("Running DB migrations ...")
 	mErr := db.WithContext(ctx).AutoMigrate(
 		&feedbacktypes.Satisfaction{},

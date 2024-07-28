@@ -10,8 +10,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/Stogas/feedback-api/internal/config"
+	"github.com/gin-gonic/gin"
 )
 
 func startAPI(conf config.APIConfig, globalMiddlewares []gin.HandlerFunc, dbMiddleware gin.HandlerFunc) {

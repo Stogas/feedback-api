@@ -5,8 +5,8 @@ import (
 	"log/slog"
 
 	"github.com/Depado/ginprom"
-	"github.com/gin-gonic/gin"
 	"github.com/Stogas/feedback-api/internal/config"
+	"github.com/gin-gonic/gin"
 )
 
 func initMetrics(m []gin.HandlerFunc) (*gin.Engine, *ginprom.Prometheus) {

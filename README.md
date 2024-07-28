@@ -79,7 +79,12 @@ Code must comply with the [configured linters](.golangci.yaml) in `golangci-lint
 
 To integrate linting into your IDE, follow [instructions here](https://golangci-lint.run/welcome/integrations/#editor-integration).
 
-For VSCode users, install the [Go extension](https://marketplace.visualstudio.com/items?itemName=golang.Go), and configure `go.lintTool` with `golangci-lint` and `go.lintFlags` with `["--fast"]`. VSCode will promt you to install `golangci-lint` automatically.
+For VSCode users, install the [Go extension](https://marketplace.visualstudio.com/items?itemName=golang.Go), and configure:
+
+  - `go.lintTool` with value `golangci-lint`
+  - `go.lintFlags` with value `--fast`
+
+VSCode will promt you to install `golangci-lint` automatically.
 
 For non-IDE users, `golangci-lint` can be installed with [these instructions](https://golangci-lint.run/welcome/install/#local-installation), and then run with `golangci-lint run`.
 
@@ -89,8 +94,9 @@ Code must follow `gofmt` and `goimports` formatting conventions. For ease of use
 
 For VSCode users, install the [Go extension](https://marketplace.visualstudio.com/items?itemName=golang.Go), select `default` in `go.formatTool`, which will use `gopls`. Make sure `go.useLanguageServer` and `editor.formatOnSave` are enabled (they are by default).
 
-For non-IDE users, run `gofmt` and `goimports` manually:
+For non-IDE users, install `goimports` and run manually:
 ```shell
-gofmt -d . # check what's wrong
-gofmt -w . # fix it
+go install golang.org/x/tools/cmd/goimports@latest # install
+goimports -d . # check what's wrong
+goimports -w . # fix it
 ```
