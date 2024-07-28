@@ -47,15 +47,26 @@ func initDB(conf config.DBConfig, tracing bool) *gorm.DB {
 			slog.Error("Failed to initialize GORM OTLP instrumentation", "error", err)
 			panic("failed to initialize GORM OTLP instrumentation")
 		}
+
+		// apply migrations within a trace context
+		dbMigrateWithTracing(db)
+	} else {
+		// apply migrations without tracing
+		err := dbMigrate(db)
+		if err != nil {
+			slog.Error("DB Migrations failed", "error", err)
+			panic("DB migrations failed")
+		}
 	}
 
-	// apply migrations within a trace context
+	return db
+}
+
+func dbMigrateWithTracing(db *gorm.DB) {
 	ctx, span := otel.Tracer("GORM-auto-migrations").Start(context.Background(), "Run DB migrations")
 	logger := slog.With("traceId", span.SpanContext().TraceID(), "spanId", span.SpanContext().SpanID())
 	logger.Info("Running DB migrations ...")
-	mErr := db.WithContext(ctx).AutoMigrate(
-		&feedbacktypes.Satisfaction{},
-	)
+	mErr := dbMigrate(db.WithContext(ctx))
 	if mErr != nil {
 		span.RecordError(mErr)
 		logger.Error("DB Migrations failed", "error", mErr)
@@ -64,6 +75,10 @@ func initDB(conf config.DBConfig, tracing bool) *gorm.DB {
 	}
 	logger.Info("DB Migrations succeeded!")
 	span.End()
+}
 
-	return db
+func dbMigrate(db *gorm.DB) error {
+	return db.AutoMigrate(
+		&feedbacktypes.Satisfaction{},
+	)
 }
