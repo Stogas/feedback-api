@@ -9,4 +9,5 @@ type Satisfaction struct {
 	gorm.Model
 	UUID      uuid.UUID `json:"uuid" binding:"required" gorm:"uniqueIndex"`
 	Satisfied *bool     `json:"satisfied" binding:"required"`
+	Comment   string    `json:"comment" binding:"max=1000"`
 }
