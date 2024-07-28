@@ -1,15 +1,16 @@
 package config
 
 import (
+	"log/slog"
 	"os"
 	"strconv"
+	"strings"
 )
 
 type APIConfig struct {
 	Host        string
 	Port        int
 	Debug       bool
-	JSONlogging bool
 	SubmitToken string
 }
 
@@ -34,11 +35,12 @@ type LogsConfig struct {
 }
 
 type Config struct {
-	API      APIConfig
-	Database DBConfig
-	Tracing  TraceConfig
-	Logs     LogsConfig
-	Metrics  MetricsConfig
+	API        APIConfig
+	Database   DBConfig
+	Tracing    TraceConfig
+	Logs       LogsConfig
+	Metrics    MetricsConfig
+	IssueTypes []string
 }
 
 type MetricsConfig struct {
@@ -48,6 +50,7 @@ type MetricsConfig struct {
 
 func New() *Config {
 	return &Config{
+		IssueTypes: getEnvAsStringSliceRequired("ISSUE_TYPES"),
 		API: APIConfig{
 			Host:        getEnvAsString("API_LISTEN_HOST", "0.0.0.0"),
 			Port:        getEnvAsInt("API_LISTEN_PORT", 80),
@@ -105,4 +108,14 @@ func getEnvAsBool(name string, defaultVal bool) bool {
 	}
 
 	return defaultVal
+}
+
+// Helper to read a comma-separated environment variable into a slice of strings
+func getEnvAsStringSliceRequired(name string) []string {
+	valStr := getEnvAsString(name, "")
+	if valStr == "" {
+		slog.Error("Missing required environment variable", "envVar", name)
+		panic("Missing required environment variable")
+	}
+	return strings.Split(valStr, ",")
 }

@@ -29,6 +29,14 @@ func startAPI(conf config.APIConfig, globalMiddlewares []gin.HandlerFunc, dbMidd
 
 	r.GET("/ping", ping)
 
+	rGet := r.Group("/get")
+	rGet.Use(
+		dbMiddleware,
+	)
+	{
+		rGet.GET("/issues", GetIssuesEndpoint)
+	}
+
 	rSubmit := r.Group("/submit")
 	rSubmit.Use(
 		submitTokenMiddleware(conf.SubmitToken),

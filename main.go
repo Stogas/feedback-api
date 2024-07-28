@@ -44,15 +44,15 @@ func main() {
 	}
 	globalMiddlewares = append(globalMiddlewares, l)
 
+	// database
+	db := initDB(conf.Database, conf.Tracing.Enabled, conf.IssueTypes)
+	dbMiddleware := createDBMiddleware(db)
+
 	// metrics
 	rMetrics, p := initMetrics(globalMiddlewares)
 	// start metrics listener in the background
 	go startMetrics(rMetrics, conf.Metrics)
 	globalMiddlewares = append(globalMiddlewares, p.Instrument(), metricsMiddleware(p))
-
-	// database
-	db := initDB(conf.Database, conf.Tracing.Enabled)
-	dbMiddleware := createDBMiddleware(db)
 
 	startAPI(conf.API, globalMiddlewares, dbMiddleware)
 }

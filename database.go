@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"slices"
 
 	"github.com/Stogas/feedback-api/internal/config"
 	feedbacktypes "github.com/Stogas/feedback-api/internal/types"
@@ -14,7 +15,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func initDB(conf config.DBConfig, tracing bool) *gorm.DB {
+func initDB(conf config.DBConfig, tracing bool, issues []string) *gorm.DB {
 	// create connection config
 	postgresConfig := postgres.New(postgres.Config{
 		DSN: fmt.Sprintf( // data source name, refer https://github.com/jackc/pgx
@@ -50,6 +51,9 @@ func initDB(conf config.DBConfig, tracing bool) *gorm.DB {
 
 		// apply migrations within a trace context
 		dbMigrateWithTracing(db)
+
+		// prefill issue types from config within a trace context
+		fillDBWithIssueTypesTracing(db, issues)
 	} else {
 		// apply migrations without tracing
 		err := dbMigrate(db)
@@ -57,10 +61,21 @@ func initDB(conf config.DBConfig, tracing bool) *gorm.DB {
 			slog.Error("DB Migrations failed", "error", err)
 			panic("DB migrations failed")
 		}
+
+		// prefill issue types from config without tracing
+		err = fillDBWithIssueTypes(db, issues)
+		if err != nil {
+			slog.Error("DB issue type prefill failed", "error", err)
+			panic("DB issue type prefill failed")
+		}
 	}
 
 	return db
 }
+
+// the db...Tracing() functions are definitely not ideal and
+// result in some duplicate work in them and in initDB(), but
+// let's deal with that later
 
 func dbMigrateWithTracing(db *gorm.DB) {
 	ctx, span := otel.Tracer("GORM-auto-migrations").Start(context.Background(), "Run DB migrations")
@@ -81,4 +96,61 @@ func dbMigrate(db *gorm.DB) error {
 	return db.AutoMigrate(
 		&feedbacktypes.Satisfaction{},
 	)
+}
+
+func fillDBWithIssueTypesTracing(db *gorm.DB, issues []string) {
+	ctx, span := otel.Tracer("GORM-issue-loading").Start(context.Background(), "Fill DB with issue types")
+	logger := slog.With("traceId", span.SpanContext().TraceID(), "spanId", span.SpanContext().SpanID())
+	logger.Info("Filling DB with provided issue types ...")
+	mErr := fillDBWithIssueTypes(db.WithContext(ctx), issues)
+	if mErr != nil {
+		span.RecordError(mErr)
+		logger.Error("DB issue type prefill failed", "error", mErr)
+		span.End()
+		panic("DB issue type prefill failed")
+	}
+	logger.Info("DB issue type prefill succeeded!")
+	span.End()
+}
+
+func fillDBWithIssueTypes(db *gorm.DB, typesFromConfig []string) error {
+	// get existing issues in DB
+	var existingIssues []feedbacktypes.Issue
+	// existingTypesMap := make(map[string]feedbacktypes.Issue)
+	err := db.Find(&existingIssues).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		slog.Error("Failed to fetch existing issue types", "error", err)
+		return err
+	}
+
+	// delete issue types not present in config from DB
+	for _, existingIssue := range existingIssues {
+		if !slices.Contains(typesFromConfig, existingIssue.Name) {
+			if err := db.Delete(&existingIssue).Error; err != nil {
+				slog.Error("Failed to mark existing issue not present in config as deleted", "issueName", existingIssue.Name)
+				return err
+			} else {
+				slog.Warn("Found issue type in DB, but not in config. Marked it as deleted", "issueName", existingIssue.Name)
+			}
+		}
+	}
+
+	// create any new issue types from config
+	var existingTypesSlice []string
+	for _, issue := range existingIssues {
+		existingTypesSlice = append(existingTypesSlice, issue.Name)
+	}
+	for _, typeName := range typesFromConfig {
+		if !slices.Contains(existingTypesSlice, typeName) {
+			newType := feedbacktypes.Issue{Name: typeName}
+			if err := db.Create(&newType).Error; err != nil {
+				slog.Error("Failed to create issue type", "issueName", newType.Name, "error", err)
+				return err
+			} else {
+				slog.Info("Created new issue type", "issueName", newType.Name)
+			}
+		}
+	}
+
+	return nil
 }

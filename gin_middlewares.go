@@ -42,6 +42,7 @@ func submitTokenMiddleware(token string) gin.HandlerFunc {
 }
 
 func satisfactionMiddleware(c *gin.Context) {
+	logger := getLogger(c.Request.Context())
 	var s feedbacktypes.Satisfaction
 
 	if err := c.ShouldBindJSON(&s); err != nil {
@@ -56,12 +57,26 @@ func satisfactionMiddleware(c *gin.Context) {
 		return
 	}
 
+	// Make sure the satisfaction issue id, if provided, fits known issue types
+	if s.IssueID != nil {
+		var knownIssueType feedbacktypes.Issue
+		db := c.MustGet("db").(*gorm.DB)
+		if err := db.First(&knownIssueType, s.IssueID).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid issue ID"})
+				return
+			}
+			logger.Error("Error reading database", "error", err)
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Database read error"})
+			return
+		}
+	}
+
 	c.Set("satisfaction", s)
 
 	c.Next()
 
 	if c.Request.Method == "POST" {
-		logger := getLogger(c.Request.Context())
 		statusCode := c.Writer.Status()
 		if statusCode >= 200 && statusCode < 300 {
 			logger.Debug("Response will be a success, will increment metrics")

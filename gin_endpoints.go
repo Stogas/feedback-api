@@ -14,6 +14,19 @@ func ping(c *gin.Context) {
 	})
 }
 
+func GetIssuesEndpoint(c *gin.Context) {
+	logger := getLogger(c.Request.Context())
+
+	db := c.MustGet("db").(*gorm.DB)
+
+	var issues []feedbacktypes.Issue
+	if err := db.Find(&issues).Error; err != nil {
+		logger.Error("Failed to fetch issue types from DB")
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Database read error"})
+	}
+	c.JSON(http.StatusOK, issues)
+}
+
 func submitSatisfactionEndpoint(c *gin.Context) {
 	newSatisfaction := c.MustGet("satisfaction").(feedbacktypes.Satisfaction)
 
