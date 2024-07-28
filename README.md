@@ -10,6 +10,8 @@ HTTP header `X-Feedback-Submit-Token` is a very rudimentary approach to prevent 
 
 A secondary goal is to be a generic Feedback API, i.e. allow this to be used in a variety of projects. For some needs, it might be required to allow submissions from authenticated users only. Thus, this project *might* implement optional JWT token validation instead of the well-known Submit Token later on.
 
+For running in Production, it's recommended to have a reverse proxy in front with an IP-based ratelimiter in order to partially prevent spam attacks.
+
 ## Features
 
 - JSON logs enabled by default (set `LOGS_JSON=false` to disable)
