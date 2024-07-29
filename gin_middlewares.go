@@ -41,27 +41,27 @@ func submitTokenMiddleware(token string) gin.HandlerFunc {
 	}
 }
 
-func satisfactionMiddleware(c *gin.Context) {
+func reportMiddleware(c *gin.Context) {
 	logger := getLogger(c.Request.Context())
-	var s feedbacktypes.Satisfaction
+	var r feedbacktypes.Report
 
-	if err := c.ShouldBindJSON(&s); err != nil {
+	if err := c.ShouldBindJSON(&r); err != nil {
 		// If there's an error in parsing JSON, return an error response
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	// special handling for booleans, as it's necessary to detect if it was not provided (default value for booleans is False)
-	if s.Satisfied == nil {
+	if r.Satisfied == nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Field 'satisfied' not provided"})
 		return
 	}
 
 	// Make sure the satisfaction issue id, if provided, fits known issue types
-	if s.IssueID != nil {
+	if r.IssueID != nil {
 		var knownIssueType feedbacktypes.Issue
 		db := c.MustGet("db").(*gorm.DB)
-		if err := db.First(&knownIssueType, s.IssueID).Error; err != nil {
+		if err := db.First(&knownIssueType, r.IssueID).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
 				c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid issue ID"})
 				return
@@ -72,7 +72,7 @@ func satisfactionMiddleware(c *gin.Context) {
 		}
 	}
 
-	c.Set("satisfaction", s)
+	c.Set("report", r)
 
 	c.Next()
 
@@ -81,7 +81,7 @@ func satisfactionMiddleware(c *gin.Context) {
 		if statusCode >= 200 && statusCode < 300 {
 			logger.Debug("Response will be a success, will increment metrics")
 			p := c.MustGet("prom").(*ginprom.Prometheus)
-			err := p.IncrementCounterValue("satisfaction", []string{strconv.FormatBool(*s.Satisfied)})
+			err := p.IncrementCounterValue("reports_total", []string{strconv.FormatBool(*r.Satisfied)})
 			if err != nil {
 				logger.Error("Failed to increment metrics counter")
 			}

@@ -27,26 +27,26 @@ func GetIssuesEndpoint(c *gin.Context) {
 	c.JSON(http.StatusOK, issues)
 }
 
-func submitSatisfactionEndpoint(c *gin.Context) {
-	newSatisfaction := c.MustGet("satisfaction").(feedbacktypes.Satisfaction)
+func submitReportEndpoint(c *gin.Context) {
+	newReport := c.MustGet("report").(feedbacktypes.Report)
 
 	logger := getLogger(c.Request.Context())
 
 	db := c.MustGet("db").(*gorm.DB)
 
-	var existingSatisfaction feedbacktypes.Satisfaction
-	existingRow := db.Where("uuid = ?", newSatisfaction.UUID).First(&existingSatisfaction)
+	var existingReport feedbacktypes.Report
+	existingRow := db.Where("uuid = ?", newReport.UUID).First(&existingReport)
 	if existingRow.Error == nil {
-		logger.Warn("A submission with this UUID already exists", "uuid", newSatisfaction.UUID, "method", c.Request.Method)
-		c.JSON(http.StatusConflict, gin.H{"error": "A submission with this UUID already exists", "uuid": newSatisfaction.UUID, "created_at": existingSatisfaction.CreatedAt})
+		logger.Warn("A submission with this UUID already exists", "uuid", newReport.UUID, "method", c.Request.Method)
+		c.JSON(http.StatusConflict, gin.H{"error": "A submission with this UUID already exists", "uuid": newReport.UUID, "created_at": existingReport.CreatedAt})
 		return
 	} else if existingRow.Error != gorm.ErrRecordNotFound {
-		logger.Error("Error reading database", "error", existingRow.Error, "uuid", newSatisfaction.UUID)
+		logger.Error("Error reading database", "error", existingRow.Error, "uuid", newReport.UUID)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database read error"})
 		return
 	}
 
-	result := db.Create(&newSatisfaction)
+	result := db.Create(&newReport)
 
 	if result.Error != nil {
 		logger.Error("Database write error", "error", result.Error)
@@ -54,32 +54,32 @@ func submitSatisfactionEndpoint(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"created_at": newSatisfaction.CreatedAt})
+	c.JSON(http.StatusCreated, gin.H{"created_at": newReport.CreatedAt})
 }
 
-func updateSatisfactionEndpoint(c *gin.Context) {
-	newSatisfaction := c.MustGet("satisfaction").(feedbacktypes.Satisfaction)
+func updateReportEndpoint(c *gin.Context) {
+	newReport := c.MustGet("report").(feedbacktypes.Report)
 
 	logger := getLogger(c.Request.Context())
 
 	db := c.MustGet("db").(*gorm.DB)
 
-	var existingSatisfaction feedbacktypes.Satisfaction
-	existingRow := db.Where("uuid = ?", newSatisfaction.UUID).First(&existingSatisfaction)
+	var existingReport feedbacktypes.Report
+	existingRow := db.Where("uuid = ?", newReport.UUID).First(&existingReport)
 	if existingRow.Error == gorm.ErrRecordNotFound {
-		logger.Warn("A PATCH submission tried to modify a non-existing resource", "uuid", newSatisfaction.UUID, "method", c.Request.Method)
-		c.JSON(http.StatusNotFound, gin.H{"error": "A submission with this UUID has not been found, submit via HTTP POST instead", "uuid": newSatisfaction.UUID})
+		logger.Warn("A PATCH submission tried to modify a non-existing resource", "uuid", newReport.UUID, "method", c.Request.Method)
+		c.JSON(http.StatusNotFound, gin.H{"error": "A submission with this UUID has not been found, submit via HTTP POST instead", "uuid": newReport.UUID})
 		return
 	} else if existingRow.Error != nil {
-		logger.Error("Error reading database", "error", existingRow.Error, "uuid", newSatisfaction.UUID)
+		logger.Error("Error reading database", "error", existingRow.Error, "uuid", newReport.UUID)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database read error"})
 		return
 	}
 
-	newSatisfaction.ID = existingSatisfaction.ID
-	newSatisfaction.CreatedAt = existingSatisfaction.CreatedAt
+	newReport.ID = existingReport.ID
+	newReport.CreatedAt = existingReport.CreatedAt
 
-	result := db.Save(&newSatisfaction)
+	result := db.Save(&newReport)
 
 	if result.Error != nil {
 		logger.Error("Database write error", "error", result.Error)
@@ -87,5 +87,5 @@ func updateSatisfactionEndpoint(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"created_at": newSatisfaction.CreatedAt, "updated_at": newSatisfaction.UpdatedAt, "uuid": newSatisfaction.UUID})
+	c.JSON(http.StatusOK, gin.H{"created_at": newReport.CreatedAt, "updated_at": newReport.UpdatedAt, "uuid": newReport.UUID})
 }

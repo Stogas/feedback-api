@@ -35,11 +35,11 @@ func startAPI(conf config.APIConfig, globalMiddlewares []gin.HandlerFunc, dbMidd
 	rSubmit.Use(
 		submitTokenMiddleware(conf.SubmitToken),
 		dbMiddleware,
-		satisfactionMiddleware,
+		reportMiddleware,
 	)
 	{
-		rSubmit.POST("/satisfaction", submitSatisfactionEndpoint)
-		rSubmit.PATCH("/satisfaction", updateSatisfactionEndpoint)
+		rSubmit.POST("/report", submitReportEndpoint)
+		rSubmit.PATCH("/report", updateReportEndpoint)
 	}
 
 	slog.Info("Starting API", "host", conf.Host, "port", conf.Port)

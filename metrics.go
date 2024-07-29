@@ -24,7 +24,7 @@ func initMetrics(m []gin.HandlerFunc) (*gin.Engine, *ginprom.Prometheus) {
 		ginprom.Path("/metrics"),
 	)
 
-	p.AddCustomCounter("satisfaction", "Counts how many good/bad satisfactions are received successfully. Note that this only counts new submittions, not updates", []string{"satisfied"})
+	p.AddCustomCounter("reports_total", "Counts how many good/bad reports are received successfully. Note that this only counts new submittions, not updates", []string{"satisfied"})
 
 	return r, p
 }

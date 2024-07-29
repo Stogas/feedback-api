@@ -16,7 +16,7 @@ For running in production, it's recommended to have a reverse proxy in front wit
 
 - JSON logs enabled by default (set `LOGS_JSON=false` to disable)
 - Rudimentary OpenTelemetry tracing and exporting via OTLP gRPC
-- Prometheus metrics (exported by default on `0.0.0.0:2222/metrics`) for HTTP and satisfaction values
+- Prometheus metrics (exported by default on `0.0.0.0:2222/metrics`) for HTTP and reports satisfaction metrics
 - PostgreSQL as database (can be modified to support [other GORM DBs](https://gorm.io/docs/connecting_to_the_database.html))
 - Automatic unexpected panic recovery (via the `gin.Recovery()` middleware)
 - Automatic recovery after DB downtime
@@ -29,10 +29,10 @@ To get issue types, query this:
 GET /issues
 ```
 
-To create a new satisfaction report, submit this:
+To create a new report, submit this:
 
 ```
-POST /submit/satisfaction
+POST /submit/report
 
 HTTP headers:
 X-Feedback-Submit-Token: <value of API_SUBMIT_TOKEN>
@@ -46,9 +46,9 @@ payload:
 }
 ```
 
-To update a satisfaction report, submit this:
+To update a report, submit this:
 ```
-PATCH /submit/satisfaction
+PATCH /submit/report
 
 HTTP headers:
 X-Feedback-Submit-Token: <value of API_SUBMIT_TOKEN>

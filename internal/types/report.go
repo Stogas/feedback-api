@@ -10,7 +10,7 @@ type Issue struct {
 	Name string
 }
 
-type Satisfaction struct {
+type Report struct {
 	gorm.Model
 	UUID      uuid.UUID `json:"uuid" binding:"required" gorm:"uniqueIndex"`
 	Satisfied *bool     `json:"satisfied" binding:"required"`

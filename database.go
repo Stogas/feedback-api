@@ -94,7 +94,7 @@ func dbMigrateWithTracing(db *gorm.DB) {
 
 func dbMigrate(db *gorm.DB) error {
 	return db.AutoMigrate(
-		&feedbacktypes.Satisfaction{},
+		&feedbacktypes.Report{},
 	)
 }
 
