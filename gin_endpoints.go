@@ -3,7 +3,8 @@ package main
 import (
 	"net/http"
 
-	feedbacktypes "github.com/Stogas/feedback-api/internal/types"
+	"github.com/Stogas/feedback-api/internal/dto"
+	"github.com/Stogas/feedback-api/internal/models"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -19,22 +20,23 @@ func GetIssuesEndpoint(c *gin.Context) {
 
 	db := c.MustGet("db").(*gorm.DB)
 
-	var issues []feedbacktypes.Issue
+	var issues []models.Issue
 	if err := db.Find(&issues).Error; err != nil {
 		logger.Error("Failed to fetch issue types from DB")
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Database read error"})
 	}
-	c.JSON(http.StatusOK, issues)
+
+	c.JSON(http.StatusOK, dto.MapIssuesToIssueResponses(issues))
 }
 
 func submitReportEndpoint(c *gin.Context) {
-	newReport := c.MustGet("report").(feedbacktypes.Report)
+	newReport := c.MustGet("report").(models.Report)
 
 	logger := getLogger(c.Request.Context())
 
 	db := c.MustGet("db").(*gorm.DB)
 
-	var existingReport feedbacktypes.Report
+	var existingReport models.Report
 	existingRow := db.Where("uuid = ?", newReport.UUID).First(&existingReport)
 	if existingRow.Error == nil {
 		logger.Warn("A submission with this UUID already exists", "uuid", newReport.UUID, "method", c.Request.Method)
@@ -54,17 +56,17 @@ func submitReportEndpoint(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"created_at": newReport.CreatedAt})
+	c.JSON(http.StatusCreated, dto.MapReportToReportResponse(newReport))
 }
 
 func updateReportEndpoint(c *gin.Context) {
-	newReport := c.MustGet("report").(feedbacktypes.Report)
+	newReport := c.MustGet("report").(models.Report)
 
 	logger := getLogger(c.Request.Context())
 
 	db := c.MustGet("db").(*gorm.DB)
 
-	var existingReport feedbacktypes.Report
+	var existingReport models.Report
 	existingRow := db.Where("uuid = ?", newReport.UUID).First(&existingReport)
 	if existingRow.Error == gorm.ErrRecordNotFound {
 		logger.Warn("A PATCH submission tried to modify a non-existing resource", "uuid", newReport.UUID, "method", c.Request.Method)
@@ -78,6 +80,7 @@ func updateReportEndpoint(c *gin.Context) {
 
 	newReport.ID = existingReport.ID
 	newReport.CreatedAt = existingReport.CreatedAt
+	newReport.DeletedAt = existingReport.DeletedAt
 
 	result := db.Save(&newReport)
 
@@ -87,5 +90,5 @@ func updateReportEndpoint(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"created_at": newReport.CreatedAt, "updated_at": newReport.UpdatedAt, "uuid": newReport.UUID})
+	c.JSON(http.StatusOK, dto.MapReportToReportResponse(newReport))
 }

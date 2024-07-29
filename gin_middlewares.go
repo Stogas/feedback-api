@@ -8,7 +8,8 @@ import (
 	"time"
 
 	"github.com/Depado/ginprom"
-	feedbacktypes "github.com/Stogas/feedback-api/internal/types"
+	"github.com/Stogas/feedback-api/internal/dto"
+	"github.com/Stogas/feedback-api/internal/models"
 	"github.com/gin-gonic/gin"
 	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
@@ -43,7 +44,7 @@ func submitTokenMiddleware(token string) gin.HandlerFunc {
 
 func reportMiddleware(c *gin.Context) {
 	logger := getLogger(c.Request.Context())
-	var r feedbacktypes.Report
+	var r dto.ReportRequest
 
 	if err := c.ShouldBindJSON(&r); err != nil {
 		// If there's an error in parsing JSON, return an error response
@@ -59,9 +60,9 @@ func reportMiddleware(c *gin.Context) {
 
 	// Make sure the satisfaction issue id, if provided, fits known issue types
 	if r.IssueID != nil {
-		var knownIssueType feedbacktypes.Issue
+		var knownIssue models.Issue
 		db := c.MustGet("db").(*gorm.DB)
-		if err := db.First(&knownIssueType, r.IssueID).Error; err != nil {
+		if err := db.First(&knownIssue, r.IssueID).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
 				c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid issue ID"})
 				return
@@ -72,7 +73,12 @@ func reportMiddleware(c *gin.Context) {
 		}
 	}
 
-	c.Set("report", r)
+	c.Set("report", models.Report{
+		UUID:      r.UUID,
+		Satisfied: r.Satisfied,
+		IssueID:   r.IssueID,
+		Comment:   r.Comment,
+	})
 
 	c.Next()
 

@@ -7,7 +7,7 @@ import (
 	"slices"
 
 	"github.com/Stogas/feedback-api/internal/config"
-	feedbacktypes "github.com/Stogas/feedback-api/internal/types"
+	"github.com/Stogas/feedback-api/internal/models"
 	slogGorm "github.com/orandin/slog-gorm"
 	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
 	"go.opentelemetry.io/otel"
@@ -94,7 +94,8 @@ func dbMigrateWithTracing(db *gorm.DB) {
 
 func dbMigrate(db *gorm.DB) error {
 	return db.AutoMigrate(
-		&feedbacktypes.Report{},
+		&models.Issue{},
+		&models.Report{},
 	)
 }
 
@@ -115,8 +116,7 @@ func fillDBWithIssueTypesTracing(db *gorm.DB, issues []string) {
 
 func fillDBWithIssueTypes(db *gorm.DB, typesFromConfig []string) error {
 	// get existing issues in DB
-	var existingIssues []feedbacktypes.Issue
-	// existingTypesMap := make(map[string]feedbacktypes.Issue)
+	var existingIssues []models.Issue
 	err := db.Find(&existingIssues).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		slog.Error("Failed to fetch existing issue types", "error", err)
@@ -142,7 +142,7 @@ func fillDBWithIssueTypes(db *gorm.DB, typesFromConfig []string) error {
 	}
 	for _, typeName := range typesFromConfig {
 		if !slices.Contains(existingTypesSlice, typeName) {
-			newType := feedbacktypes.Issue{Name: typeName}
+			newType := models.Issue{Name: typeName}
 			if err := db.Create(&newType).Error; err != nil {
 				slog.Error("Failed to create issue type", "issueName", newType.Name, "error", err)
 				return err
