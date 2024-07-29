@@ -2,7 +2,7 @@
 
 Feedback API is a RESTful Go API allowing submission and updates to a user's satisfaction report for other apps.
 
-The main goal is to be simple and allow partial submittions (i.e. without further comments), if a user decides to abandon the process in the middle of the report.
+The main goal is to be simple and allow partial submittions (i.e. without further comments or issue types), if a user decides to abandon the process in the middle of the report.
 
 Thus, the first request by the front-end must be a POST with a newly generated UUID, and subsequent requests must be of type PATCH with the same UUID - more details below.
 
@@ -10,7 +10,7 @@ HTTP header `X-Feedback-Submit-Token` is a very rudimentary approach to prevent 
 
 A secondary goal is to be a generic Feedback API, i.e. allow this to be used in a variety of projects. For some needs, it might be required to allow submissions from authenticated users only. Thus, this project *might* implement optional JWT token validation instead of the well-known Submit Token later on.
 
-For running in Production, it's recommended to have a reverse proxy in front with an IP-based ratelimiter in order to partially prevent spam attacks.
+For running in production, it's recommended to have a reverse proxy in front with an IP-based ratelimiter in order to partially prevent spam attacks.
 
 ## Features
 
@@ -22,6 +22,12 @@ For running in Production, it's recommended to have a reverse proxy in front wit
 - Automatic recovery after DB downtime
 
 ## Usage
+
+To get issue types, query this:
+
+```
+GET /issues
+```
 
 To create a new satisfaction report, submit this:
 
@@ -35,6 +41,7 @@ payload:
 {
   "satisfied": <bool>,
   "uuid": "<new client-side generated UUID>",
+  "issue_id": <int>, # optional
 	<...> other data
 }
 ```
@@ -50,6 +57,7 @@ payload:
 {
   "satisfied": <bool>,
   "uuid": "<existing UUID>",
+  "issue_id": <int>, # optional
 	<...> other data
 }
 ```
