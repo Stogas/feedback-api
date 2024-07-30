@@ -78,6 +78,7 @@ func reportMiddleware(c *gin.Context) {
 		Satisfied: r.Satisfied,
 		IssueID:   r.IssueID,
 		Comment:   r.Comment,
+		Metadata:  r.Metadata,
 	})
 
 	c.Next()

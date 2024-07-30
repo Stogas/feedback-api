@@ -8,12 +8,14 @@ Thus, the first request by the front-end must be a POST with a newly generated U
 
 HTTP header `X-Feedback-Submit-Token` is a very rudimentary approach to prevent random submissions - this token should be known to your frontend, and as such, should not be considered a "secret". If necessary, one can rotate this token with every frontend update/deployment.
 
-A secondary goal is to be a generic Feedback API, i.e. allow this to be used in a variety of projects. For some needs, it might be required to allow submissions from authenticated users only. Thus, this project *might* implement optional JWT token validation instead of the well-known Submit Token later on.
+A secondary goal is to be a generic Feedback API, i.e. allow this to be used in a variety of projects. For this, you can post the `.metadata` parameter, which accepts any arbitrary JSON up to character size 2048.
+For some needs, it might be required to allow submissions from authenticated users only. Thus, this project *might* implement optional JWT token validation instead of the well-known Submit Token later on.
 
 For running in production, it's recommended to have a reverse proxy in front with an IP-based ratelimiter in order to partially prevent spam attacks.
 
 ## Features
 
+- Allows submitting arbitrary JSON metadata
 - JSON logs enabled by default (set `LOGS_JSON=false` to disable)
 - Rudimentary OpenTelemetry tracing and exporting via OTLP gRPC
 - Prometheus metrics (exported by default on `0.0.0.0:2222/metrics`) for HTTP and reports satisfaction metrics
@@ -42,7 +44,7 @@ payload:
   "satisfied": <bool>,
   "uuid": "<new client-side generated UUID>",
   "issue_id": <int>, # optional
-	<...> other data
+	"metadata": {} # arbitrary JSON, optional
 }
 ```
 
@@ -58,7 +60,7 @@ payload:
   "satisfied": <bool>,
   "uuid": "<existing UUID>",
   "issue_id": <int>, # optional
-	<...> other data
+	"metadata": {} # arbitrary JSON, optional
 }
 ```
 

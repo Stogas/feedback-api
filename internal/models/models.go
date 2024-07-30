@@ -2,6 +2,7 @@ package models
 
 import (
 	"github.com/google/uuid"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -17,4 +18,5 @@ type Report struct {
 	Comment   string    `binding:"max=1000"`
 	IssueID   *int
 	Issue     *Issue
+	Metadata  *datatypes.JSON `binding:"max=2048"`
 }

@@ -23,3 +23,4 @@ go.work.sum
 
 # local testing .env
 .env.local
+.payload.json

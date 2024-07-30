@@ -15,6 +15,7 @@ func MapReportToReportResponse(report models.Report) ReportResponse {
 			Satisfied: report.Satisfied,
 			Comment:   report.Comment,
 			IssueID:   report.IssueID,
+			Metadata:  report.Metadata,
 		},
 	}
 }
