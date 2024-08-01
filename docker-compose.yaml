@@ -1,4 +1,23 @@
 services:
+  feedback-api:
+    image: feedback-api:dev
+    restart: unless-stopped
+    environment:
+      - API_SUBMIT_TOKEN=test
+      - POSTGRES_HOST=postgresql
+      - POSTGRES_USER=test
+      - POSTGRES_PASSWORD=test
+      - POSTGRES_DATABASE=test
+      - OTLP_TRACING_ENABLED=true
+      - OTLP_GRPC_HOST=tempo
+      - ISSUE_TYPES=testA,testB,testC
+    ports:
+      - "127.0.0.1:8080:8080/tcp"
+    depends_on:
+      - postgresql
+      - tempo
+
+
 
   postgresql:
     image: postgres:16
@@ -15,7 +34,7 @@ services:
     restart: unless-stopped
     command: [ "-config.file=/etc/tempo.yaml" ]
     volumes:
-      - ./tempo.yaml:/etc/tempo.yaml
+      - ./local-dev/tempo.yaml:/etc/tempo.yaml
       # - ./tempo-data:/var/tempo
     ports:
       # - "14268:14268"  # jaeger ingest
@@ -29,7 +48,7 @@ services:
     image: grafana/grafana:11.0.0
     restart: unless-stopped
     volumes:
-      - ./grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - ./local-dev/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
     environment:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin

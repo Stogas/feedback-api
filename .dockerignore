@@ -1,0 +1,17 @@
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+go.work.sum
+.env
+.env.local
+.payload.json
+.gitignore
+.git
+.payload.json
+Dockerfile
+README.md
