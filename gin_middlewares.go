@@ -33,7 +33,7 @@ func metricsMiddleware(p *ginprom.Prometheus) gin.HandlerFunc {
 
 func submitTokenMiddleware(token string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if c.GetHeader("X-Feedback-Submit-Token") == token {
+		if token == "" || c.GetHeader("X-Feedback-Submit-Token") == token {
 			c.Next()
 		} else {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "X-Feedback-Submit-Token not provided or incorrect"})

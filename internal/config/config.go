@@ -55,7 +55,7 @@ func New() *Config {
 			Host:        getEnvAsString("API_LISTEN_HOST", "0.0.0.0"),
 			Port:        getEnvAsInt("API_LISTEN_PORT", 80),
 			Debug:       getEnvAsBool("API_DEBUG_MODE", false),
-			SubmitToken: getEnvAsString("API_SUBMIT_TOKEN", "test"),
+			SubmitToken: getEnvAsString("API_SUBMIT_TOKEN", ""),
 		},
 		Database: DBConfig{
 			Host:     getEnvAsString("POSTGRES_HOST", "localhost"),
