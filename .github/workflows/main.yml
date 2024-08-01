@@ -1,8 +1,13 @@
-name: main-push
+name: Push in Main
 on:
   push:
     branches: main
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
 
 jobs:
   lint:
     uses: ./.github/workflows/golangci-lint.yml
+  build:
+    uses: ./.github/workflows/build.yml
+    needs: lint
