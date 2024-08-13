@@ -7,7 +7,7 @@ image:
 configMap:
   API_LISTEN_PORT: 8080
   API_DEBUG_MODE: "false"
-  POSTGRES_HOST: "{{ include "feedbackapi.fullname" $ }}-postgresql"
+  # POSTGRES_HOST: ""
   POSTGRES_PORT: 5432
   POSTGRES_USER: "feedbackapi"
   POSTGRES_DATABASE: "feedbackapi"

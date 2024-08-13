@@ -60,6 +60,9 @@ spec:
             timeoutSeconds: 3
             failureThreshold: 3
             periodSeconds: 5
+          env:
+            - name: POSTGRES_HOST
+              value: "{{ include "feedbackapi.fullname" $ }}-postgresql"
           envFrom:
             - configMapRef:
                 name: {{ include "feedbackapi.fullname" $ }}
