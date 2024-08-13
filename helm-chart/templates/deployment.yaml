@@ -22,15 +22,15 @@ spec:
       app: {{ include "feedbackapi.fullname" $ }}
   template:
     metadata:
-    {{- with $.Values.podAnnotations }}
-    annotations:
-      {{- toYaml . | nindent 8 }}
-      rollme: {{ randAlphaNum 5 | quote }}
-    {{- end }}
-    labels:
-      {{- include "feedbackapi.selectorLabels" $ | nindent 6 }}
-      app.kubernetes.io/component: feedback-api
-      app: {{ include "feedbackapi.fullname" $ }}
+      {{- with $.Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 10 }}
+        rollme: {{ randAlphaNum 5 | quote }}
+      {{- end }}
+      labels:
+        {{- include "feedbackapi.selectorLabels" $ | nindent 8 }}
+        app.kubernetes.io/component: feedback-api
+        app: {{ include "feedbackapi.fullname" $ }}
     spec:
     {{- if $.Values.podSecurityContext.enabled }}
       securityContext:
