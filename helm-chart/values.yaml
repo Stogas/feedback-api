@@ -7,10 +7,10 @@ image:
 configMap:
   API_LISTEN_PORT: 8080
   API_DEBUG_MODE: "false"
-  POSTGRES_HOST: ""
+  POSTGRES_HOST: "{{ include "feedbackapi.fullname" $ }}-postgresql"
   POSTGRES_PORT: 5432
-  POSTGRES_USER: ""
-  POSTGRES_DATABASE: ""
+  POSTGRES_USER: "feedbackapi"
+  POSTGRES_DATABASE: "feedbackapi"
   OTLP_TRACING_ENABLED: "false"
   OTLP_GRPC_HOST: "127.0.0.1"
   OTLP_GRPC_PORT: "4317"
