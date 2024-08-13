@@ -1,0 +1,67 @@
+image:
+  repository: "ghcr.io"
+  # image.tag defaults to Chart appVersion
+  #tag: ""
+  pullPolicy: "IfNotPresent"
+
+configMap:
+  API_LISTEN_PORT: 8080
+  API_DEBUG_MODE: "false"
+  POSTGRES_HOST: ""
+  POSTGRES_PORT: 5432
+  POSTGRES_USER: ""
+  POSTGRES_DATABASE: ""
+  OTLP_TRACING_ENABLED: "false"
+  OTLP_GRPC_HOST: "127.0.0.1"
+  OTLP_GRPC_PORT: "4317"
+  LOGS_JSON: "true"
+  LOGS_DEBUG: "false"
+  LOGS_SOURCE: "false"
+  METRICS_PORT: 2222
+
+# .existingSecret must contain the following keys: API_SUBMIT_TOKEN, POSTGRES_PASSWORD
+# If changing the secret name in .secretName, also change it in .postgresql.auth.existingSecret
+existingSecret: "feedbackapi"
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 32Mi
+  limits:
+    memory: 128Mi
+
+healthProbes:
+  livenessPath: "/ping"
+
+podMonitor:
+  enabled: true
+
+podAnnotations: {}
+
+podSecurityContext:
+  enabled: true
+  runAsUser: 1000
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  fsGroup: 1001
+
+postgresql:
+  enabled: true
+  auth:
+    enablePostgresUser: false
+    username: "feedbackapi"
+    database: "feedbackapi"
+    existingSecret: feedbackapi
+    secretKeys:
+      userPasswordKey: POSTGRES_PASSWORD
+  architecture: standalone
+  primary:
+    resources: {}
+    persistence:
+      enabled: true
+      storageClass: ""
+      size: 8Gi
+
+rollingUpdate:
+  maxUnavailable: 50%
+  maxSurge: 100%

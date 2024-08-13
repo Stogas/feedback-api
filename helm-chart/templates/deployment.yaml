@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "feedbackapi.fullname" $ }}
+  labels:
+    {{- include "feedbackapi.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: feedback-api
+    app: {{ include "feedbackapi.fullname" $ }}
+spec:
+  revisionHistoryLimit: 5
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    {{- with $.Values.rollingUpdate }}
+    rollingUpdate:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+  selector:
+    matchLabels:
+      {{- include "feedbackapi.selectorLabels" $ | nindent 6 }}
+      app.kubernetes.io/component: feedback-api
+  template:
+    metadata:
+    {{- with $.Values.podAnnotations }}
+    annotations:
+      {{- toYaml . | nindent 8 }}
+      rollme: {{ randAlphaNum 5 | quote }}
+    {{- end }}
+    labels:
+      {{- include "feedbackapi.selectorLabels" $ | nindent 6 }}
+      app.kubernetes.io/component: feedback-api
+      app: {{ include "feedbackapi.fullname" $ }}
+    spec:
+    {{- if $.Values.podSecurityContext.enabled }}
+      securityContext:
+        {{- toYaml $.Values.podSecurityContext | nindent 8 }}
+    {{- end }}
+      containers:
+        - name: feedback-api
+          image: "{{ $.Values.image.repository }}:{{ default .Chart.AppVersion .Values.image.tag }}"
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ $.Values.configMap.API_LISTEN_PORT }}
+              protocol: TCP
+            - name: metrics
+              containerPort: {{ $.Values.configMap.METRICS_PORT }}
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: {{ $.Values.healthProbes.livenessPath }}
+              port: http
+            timeoutSeconds: 3
+            failureThreshold: 24
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: {{ $.Values.healthProbes.livenessPath }}
+              port: http
+            timeoutSeconds: 3
+            failureThreshold: 3
+            periodSeconds: 5
+          envFrom:
+            - configMapRef:
+                name: {{ include "feedbackapi.fullname" $ }}
+            - secretRef:
+                name: {{ required ".existingSecret is required!" $.Values.existingSecret }}
+          resources:
+            {{- toYaml $.Values.resources | nindent 12 }}
+---

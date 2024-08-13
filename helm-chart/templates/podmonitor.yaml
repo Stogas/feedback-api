@@ -1,0 +1,18 @@
+{{- if $.Values.podMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: {{ include "feedbackapi.fullname" $ }}
+  labels:
+    {{- include "feedbackapi.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: feedback-api
+    app: {{ include "feedbackapi.fullname" $ }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "feedbackapi.selectorLabels" $ | nindent 6 }}
+      app.kubernetes.io/component: feedback-api
+  podMetricsEndpoints:
+  - port: metrics
+---
+{{- end }}
