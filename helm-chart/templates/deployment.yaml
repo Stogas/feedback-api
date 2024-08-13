@@ -19,6 +19,7 @@ spec:
     matchLabels:
       {{- include "feedbackapi.selectorLabels" $ | nindent 6 }}
       app.kubernetes.io/component: feedback-api
+      app: {{ include "feedbackapi.fullname" $ }}
   template:
     metadata:
     {{- with $.Values.podAnnotations }}

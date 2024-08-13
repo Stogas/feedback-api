@@ -2,8 +2,8 @@ apiVersion: v2
 name: feedback-api
 description: A Helm chart for deploying Feedback-API
 type: application
-version: 1.0.3
-appVersion: "v1.0.3"
+version: 1.0.4
+appVersion: "v1.0.4"
 sources:
   - https://github.com/Stogas/feedback-api
   - https://github.com/Stogas/feedback-api/helm-chart
