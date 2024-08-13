@@ -18,6 +18,7 @@ configMap:
   LOGS_DEBUG: "false"
   LOGS_SOURCE: "false"
   METRICS_PORT: 2222
+  ISSUE_TYPES: "issueA,issueB,issueC"
 
 # .existingSecret must contain the following keys: API_SUBMIT_TOKEN, POSTGRES_PASSWORD
 # If changing the secret name in .secretName, also change it in .postgresql.auth.existingSecret
