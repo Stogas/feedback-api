@@ -12,6 +12,7 @@ type APIConfig struct {
 	Port        int
 	Debug       bool
 	SubmitToken string
+	CorsOrigins []string
 }
 
 type DBConfig struct {
@@ -56,6 +57,7 @@ func New() *Config {
 			Port:        getEnvAsInt("API_LISTEN_PORT", 80),
 			Debug:       getEnvAsBool("API_DEBUG_MODE", false),
 			SubmitToken: getEnvAsString("API_SUBMIT_TOKEN", ""),
+			CorsOrigins: getEnvAsStringSlice("API_CORS_ORIGINS", []string{"*"}),
 		},
 		Database: DBConfig{
 			Host:     getEnvAsString("POSTGRES_HOST", "localhost"),
@@ -118,4 +120,13 @@ func getEnvAsStringSliceRequired(name string) []string {
 		panic("Missing required environment variable")
 	}
 	return strings.Split(valStr, ",")
+}
+
+// Helper to read a comma-separated environment variable into a slice of strings
+func getEnvAsStringSlice(name string, defaultVal []string) []string {
+	valStr := getEnvAsString(name, "")
+	if valStr != "" {
+		return strings.Split(valStr, ",")
+	}
+	return defaultVal
 }

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/Stogas/feedback-api/internal/config"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,6 +23,14 @@ func startAPI(conf config.APIConfig, globalMiddlewares []gin.HandlerFunc, dbMidd
 	r := gin.New()
 
 	r.Use(gin.Recovery())
+
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowOrigins = conf.CorsOrigins
+	corsConfig.AllowHeaders = append(corsConfig.AllowHeaders, "X-Feedback-Submit-Token")
+	corsConfig.MaxAge = 1 * time.Hour
+	corsConfig.AllowWildcard = true
+	r.Use(cors.New(corsConfig))
+
 	for _, m := range globalMiddlewares {
 		// slog.Debug("Gin: Adding middleware")
 		r.Use(m)

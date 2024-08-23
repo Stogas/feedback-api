@@ -80,7 +80,7 @@ docker compose up -d
 
 Run app with the default Environment Variables and credentials (found in `.env`):
 ```shell
-go run main.go
+go run *.go
 ```
 
 ### Linting & formatting style
