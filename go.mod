@@ -4,10 +4,11 @@ go 1.22.5
 
 require (
 	github.com/Depado/ginprom v1.8.1
+	github.com/gin-contrib/cors v1.7.2
 	github.com/gin-gonic/gin v1.10.0
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
-	github.com/orandin/slog-gorm v1.3.2
+	github.com/orandin/slog-gorm v1.4.0
 	github.com/uptrace/opentelemetry-go-extra/otelgorm v0.3.1
 	go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin v0.53.0
 	go.opentelemetry.io/contrib/propagators/b3 v1.28.0
@@ -30,7 +31,6 @@ require (
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.5 // indirect
-	github.com/gin-contrib/cors v1.7.2 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
