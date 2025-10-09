@@ -88,7 +88,7 @@ func TestEndpointErrorHandling(t *testing.T) {
 		})
 
 		// Response recorder should not have been written to
-		assert.Equal(t, 200, w.Code) // Default value, nothing written
+		assert.Equal(t, http.StatusOK, w.Code) // Default value, nothing written
 	})
 
 	t.Run("submitReportEndpoint panics gracefully when no report context", func(t *testing.T) {
@@ -102,7 +102,7 @@ func TestEndpointErrorHandling(t *testing.T) {
 		})
 
 		// Response recorder should not have been written to
-		assert.Equal(t, 200, w.Code) // Default value, nothing written
+		assert.Equal(t, http.StatusOK, w.Code) // Default value, nothing written
 	})
 
 	t.Run("updateReportEndpoint panics gracefully when no report context", func(t *testing.T) {
@@ -116,7 +116,7 @@ func TestEndpointErrorHandling(t *testing.T) {
 		})
 
 		// Response recorder should not have been written to
-		assert.Equal(t, 200, w.Code) // Default value, nothing written
+		assert.Equal(t, http.StatusOK, w.Code) // Default value, nothing written
 	})
 }
 
