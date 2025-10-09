@@ -13,7 +13,7 @@ import (
 
 const testMetadataJSON = `{"source": "web", "rating": 5}`
 
-func TestMapReportToReportResponse(t *testing.T) {
+func TestMapReportToReportResponse_BasicMapping(t *testing.T) {
 	t.Run("maps complete Report to ReportResponse", func(t *testing.T) {
 		testUUID := uuid.New()
 		satisfied := true
@@ -67,7 +67,9 @@ func TestMapReportToReportResponse(t *testing.T) {
 		assert.Nil(t, response.IssueID)
 		assert.Nil(t, response.Metadata)
 	})
+}
 
+func TestMapReportToReportResponse_EdgeCases(t *testing.T) {
 	t.Run("maps Report with nil optional fields", func(t *testing.T) {
 		testUUID := uuid.New()
 		satisfied := true
@@ -111,7 +113,7 @@ func TestMapReportToReportResponse(t *testing.T) {
 	})
 }
 
-func TestMapIssuesToIssueResponses(t *testing.T) {
+func TestMapIssuesToIssueResponses_BasicCases(t *testing.T) {
 	t.Run("maps multiple Issues to IssueResponses", func(t *testing.T) {
 		issues := []models.Issue{
 			{
@@ -156,7 +158,9 @@ func TestMapIssuesToIssueResponses(t *testing.T) {
 		assert.Equal(t, uint(42), responses[0].ID)
 		assert.Equal(t, "Critical Bug", responses[0].Name)
 	})
+}
 
+func TestMapIssuesToIssueResponses_EdgeCases(t *testing.T) {
 	t.Run("returns empty slice for empty input", func(t *testing.T) {
 		issues := []models.Issue{}
 

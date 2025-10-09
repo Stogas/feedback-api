@@ -1,20 +1,23 @@
-name: golangci-lint
+name: Go Tests
 on: workflow_call
 
 permissions:
   contents: read
 
 jobs:
-  golangci:
-    name: lint
+  test:
+    name: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v8
-        with:
-          version: latest
+
+      # - name: Download dependencies
+      #   run: go mod download
+
+      - name: Run tests
+        uses: robherley/go-test-action@v0

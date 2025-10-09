@@ -1,13 +1,15 @@
 name: Push in Main
 on:
   push:
-    branches: main
+    branches: ["main"]
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - "v[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
   lint:
     uses: ./.github/workflows/golangci-lint.yml
+  test:
+    uses: ./.github/workflows/test.yml
   build:
     uses: ./.github/workflows/build.yml
-    needs: lint
+    needs: [lint, test]
