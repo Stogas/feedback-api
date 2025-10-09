@@ -11,13 +11,15 @@ import (
 	"gorm.io/gorm"
 )
 
+const testMetadataJSON = `{"source": "web", "rating": 5}`
+
 func TestMapReportToReportResponse(t *testing.T) {
 	t.Run("maps complete Report to ReportResponse", func(t *testing.T) {
 		testUUID := uuid.New()
 		satisfied := true
 		issueID := 42
-		metadata := datatypes.JSON(`{"source": "web", "rating": 5}`)
-		
+		metadata := datatypes.JSON(testMetadataJSON)
+
 		report := models.Report{
 			Model: gorm.Model{
 				ID:        1,
@@ -129,13 +131,13 @@ func TestMapIssuesToIssueResponses(t *testing.T) {
 		responses := MapIssuesToIssueResponses(issues)
 
 		assert.Len(t, responses, 3)
-		
+
 		assert.Equal(t, uint(1), responses[0].ID)
 		assert.Equal(t, "Bug Report", responses[0].Name)
-		
+
 		assert.Equal(t, uint(2), responses[1].ID)
 		assert.Equal(t, "Feature Request", responses[1].Name)
-		
+
 		assert.Equal(t, uint(3), responses[2].ID)
 		assert.Equal(t, "Improvement Suggestion", responses[2].Name)
 	})
@@ -214,7 +216,7 @@ func TestReportResponse_Structure(t *testing.T) {
 	t.Run("ReportResponse embeds ReportRequest correctly", func(t *testing.T) {
 		testUUID := uuid.New()
 		satisfied := true
-		
+
 		response := ReportResponse{
 			ReportRequest: ReportRequest{
 				UUID:      testUUID,
