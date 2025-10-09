@@ -1,9 +1,9 @@
 name: Push in Main
 on:
   push:
-    branches: main
+    branches: ["main"]
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - "v[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
   lint:
