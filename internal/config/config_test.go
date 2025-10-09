@@ -114,7 +114,7 @@ func TestGetEnvAsInt(t *testing.T) {
 	}
 }
 
-func TestGetEnvAsBool(t *testing.T) {
+func TestGetEnvAsBool_BasicCases(t *testing.T) {
 	tests := []struct {
 		name       string
 		envKey     string
@@ -154,6 +154,29 @@ func TestGetEnvAsBool(t *testing.T) {
 			expected:   true,
 			setEnv:     true,
 		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.setEnv {
+				t.Setenv(tt.envKey, tt.envValue)
+			}
+
+			result := getEnvAsBool(tt.envKey, tt.defaultVal)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestGetEnvAsBool_SpecialCases(t *testing.T) {
+	tests := []struct {
+		name       string
+		envKey     string
+		envValue   string
+		defaultVal bool
+		expected   bool
+		setEnv     bool
+	}{
 		{
 			name:       "returns default when env var is empty string",
 			envKey:     "TEST_BOOL_VAR",

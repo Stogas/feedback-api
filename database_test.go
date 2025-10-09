@@ -35,7 +35,7 @@ func issueSyncAlgorithm(existingIssues []models.Issue, typesFromConfig []string)
 	return toDelete, toCreate
 }
 
-func TestIssueSyncAlgorithm(t *testing.T) {
+func TestIssueSyncAlgorithm_BasicCases(t *testing.T) {
 	t.Run("creates new issue types when none exist", func(t *testing.T) {
 		existingIssues := []models.Issue{} // Empty database
 		typesFromConfig := []string{"bug", "feature"}
@@ -73,7 +73,9 @@ func TestIssueSyncAlgorithm(t *testing.T) {
 		assert.Equal(t, "old-feature", toDelete[0].Name, "Should delete old-feature")
 		assert.Equal(t, []string{"enhancement"}, toCreate, "Should create enhancement")
 	})
+}
 
+func TestIssueSyncAlgorithm_EdgeCases(t *testing.T) {
 	t.Run("handles empty config - removes all existing issues", func(t *testing.T) {
 		existingIssues := []models.Issue{
 			{Name: "bug"},
@@ -114,7 +116,9 @@ func TestIssueSyncAlgorithm(t *testing.T) {
 		assert.Contains(t, toCreate, "bug", "Should include bug in creation list")
 		assert.Contains(t, toCreate, "feature", "Should include feature in creation list")
 	})
+}
 
+func TestIssueSyncAlgorithm_ComplexScenario(t *testing.T) {
 	t.Run("handles complex synchronization scenario", func(t *testing.T) {
 		existingIssues := []models.Issue{
 			{Name: "bug"},

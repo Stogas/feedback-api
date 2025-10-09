@@ -49,7 +49,7 @@ func TestReportRequest_JSONMarshaling(t *testing.T) {
 	})
 }
 
-func TestReportRequest_JSONUnmarshaling(t *testing.T) {
+func TestReportRequest_JSONUnmarshaling_ValidCases(t *testing.T) {
 	t.Run("unmarshals valid JSON to ReportRequest", func(t *testing.T) {
 		testUUID := uuid.New()
 		jsonData := `{
@@ -91,7 +91,9 @@ func TestReportRequest_JSONUnmarshaling(t *testing.T) {
 		assert.Nil(t, req.IssueID)
 		assert.Nil(t, req.Metadata)
 	})
+}
 
+func TestReportRequest_JSONUnmarshaling_EdgeCases(t *testing.T) {
 	t.Run("handles null values for optional fields", func(t *testing.T) {
 		testUUID := uuid.New()
 		jsonData := `{
@@ -137,7 +139,7 @@ func TestReportRequest_JSONUnmarshaling(t *testing.T) {
 	})
 }
 
-func TestReportRequest_FieldValidation(t *testing.T) {
+func TestReportRequest_FieldValidation_BasicCases(t *testing.T) {
 	t.Run("creates valid ReportRequest with all fields", func(t *testing.T) {
 		testUUID := uuid.New()
 		satisfied := true
@@ -177,7 +179,9 @@ func TestReportRequest_FieldValidation(t *testing.T) {
 		assert.Nil(t, req.IssueID)
 		assert.Nil(t, req.Metadata)
 	})
+}
 
+func TestReportRequest_FieldValidation_PointerFields(t *testing.T) {
 	t.Run("handles pointer fields correctly", func(t *testing.T) {
 		testUUID := uuid.New()
 		satisfied := true

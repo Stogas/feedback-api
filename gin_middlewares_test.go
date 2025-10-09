@@ -17,24 +17,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// Helper to create test context with logger
-func createTestContextWithLogger() (*gin.Context, *httptest.ResponseRecorder) {
-	gin.SetMode(gin.TestMode)
-	w := httptest.NewRecorder()
-	c, _ := gin.CreateTestContext(w)
-
-	// Create a basic request first
-	c.Request = httptest.NewRequest("GET", "/", nil)
-
-	// Set up a logger in the context
-	logger := slog.New(slog.NewTextHandler(bytes.NewBuffer(nil), nil))
-	ctx := context.WithValue(c.Request.Context(), contextLogger, logger)
-	c.Request = c.Request.WithContext(ctx)
-
-	return c, w
-}
-
-func TestSubmitTokenMiddleware(t *testing.T) {
+func TestSubmitTokenMiddleware_AllowedCases(t *testing.T) {
 	t.Run("allows request when token is empty (no token required)", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(w)
@@ -60,7 +43,9 @@ func TestSubmitTokenMiddleware(t *testing.T) {
 		assert.False(t, c.IsAborted())
 		assert.Equal(t, http.StatusOK, w.Code)
 	})
+}
 
+func TestSubmitTokenMiddleware_BlockedCases(t *testing.T) {
 	t.Run("blocks request when token is required but not provided", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(w)
@@ -98,7 +83,7 @@ func TestSubmitTokenMiddleware(t *testing.T) {
 	})
 }
 
-func TestReportMiddleware(t *testing.T) {
+func TestReportMiddleware_InvalidJSONSyntax(t *testing.T) {
 	t.Run("rejects request with invalid JSON syntax", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(w)
@@ -124,7 +109,9 @@ func TestReportMiddleware(t *testing.T) {
 		// Just check that there's an error, the exact message may vary
 		assert.NotEmpty(t, response["error"])
 	})
+}
 
+func TestReportMiddleware_InvalidValidation(t *testing.T) {
 	t.Run("rejects request with invalid boolean value", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(w)
@@ -160,7 +147,9 @@ func TestReportMiddleware(t *testing.T) {
 		assert.True(t, ok)
 		assert.True(t, len(errorStr) > 0, "Error message should not be empty")
 	})
+}
 
+func TestReportMiddleware_MissingFields(t *testing.T) {
 	t.Run("rejects request when satisfied field is missing", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(w)
