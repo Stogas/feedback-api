@@ -99,11 +99,11 @@ func TestSubmitTokenMiddleware(t *testing.T) {
 }
 
 func TestReportMiddleware(t *testing.T) {
-	t.Run("rejects request with invalid JSON", func(t *testing.T) {
+	t.Run("rejects request with invalid JSON syntax", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(w)
 
-		// Create request first
+		// Create request first - unquoted value causes JSON parsing error
 		invalidJSON := `{"uuid": "invalid-uuid", "satisfied": not-a-boolean}`
 		c.Request = httptest.NewRequest("POST", "/reports", strings.NewReader(invalidJSON))
 		c.Request.Header.Set("Content-Type", "application/json")
@@ -123,6 +123,42 @@ func TestReportMiddleware(t *testing.T) {
 		assert.NoError(t, err)
 		// Just check that there's an error, the exact message may vary
 		assert.NotEmpty(t, response["error"])
+	})
+
+	t.Run("rejects request with invalid boolean value", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+
+		testUUID := uuid.New()
+		// Valid JSON syntax but invalid boolean value - tests validation logic
+		invalidBooleanJSON := `{
+			"uuid": "` + testUUID.String() + `",
+			"satisfied": "not-a-boolean",
+			"comment": "Testing invalid boolean validation"
+		}`
+
+		c.Request = httptest.NewRequest("POST", "/reports", strings.NewReader(invalidBooleanJSON))
+		c.Request.Header.Set("Content-Type", "application/json")
+
+		// Set up logger
+		logger := slog.New(slog.NewTextHandler(bytes.NewBuffer(nil), nil))
+		ctx := context.WithValue(c.Request.Context(), contextLogger, logger)
+		c.Request = c.Request.WithContext(ctx)
+
+		reportMiddleware(c)
+
+		assert.True(t, c.IsAborted())
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+
+		var response map[string]interface{}
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		assert.NoError(t, err)
+		// Should get validation error for boolean type mismatch
+		assert.NotEmpty(t, response["error"])
+		// The error should mention the validation issue
+		errorStr, ok := response["error"].(string)
+		assert.True(t, ok)
+		assert.True(t, len(errorStr) > 0, "Error message should not be empty")
 	})
 
 	t.Run("rejects request when satisfied field is missing", func(t *testing.T) {
