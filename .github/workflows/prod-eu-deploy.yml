@@ -1,4 +1,4 @@
-name: Deploy to production
+name: Deploy to production-eu
 
 on:
   workflow_dispatch:
@@ -17,7 +17,7 @@ on:
         default: patch
 
 concurrency:
-  group: deploy-production
+  group: deploy-production-eu
   cancel-in-progress: true
 
 permissions:
@@ -79,7 +79,7 @@ jobs:
       - name: Deploy to Kubernetes
         uses: meedio/actions/deploy@v2
         with:
-          environment: production
+          environment: production-eu
           app-name: feedback-api
           version: '${{ needs.calculate-version.outputs.version }}'
           file-path: 'feedback-api/2-feedback-api.yaml'

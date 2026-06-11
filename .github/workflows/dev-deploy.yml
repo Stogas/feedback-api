@@ -4,8 +4,6 @@ on:
   push:
     branches: 
       - main
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
 
 concurrency:
   group: deploy-dev
@@ -14,7 +12,6 @@ concurrency:
 permissions:
   id-token: write
   contents: read
-  packages: write
 
 jobs:
   lint:
@@ -45,11 +42,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build and push
-        uses: ./.github/actions/build
+        uses: meedio/actions/docker-build@v2
         with:
-          docker-container-name: 'ghcr.io/meedio/feedback-api'
+          app-name: feedback-api
           version: 'main-${{ needs.get-current-time.outputs.time }}'
-          token: ${{ secrets.GITHUB_TOKEN }}
 
   deploy:
     needs: [build, get-current-time]
@@ -59,13 +55,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Deploy to Kubernetes
-        uses: ./.github/actions/deploy
+        uses: meedio/actions/deploy@v2
         with:
-          environment: 'development'
-          docker-container-name: 'ghcr.io/meedio/feedback-api'
+          environment: development
+          app-name: feedback-api
           version: 'main-${{ needs.get-current-time.outputs.time }}'
-          yaml-path: '.spec.template.spec.containers.[0].image'
           file-path: 'other/feedback-api/2-feedback-api.yaml'
-          kubectl-namespace: 'feedback-api'
-          kubectl-object: 'deployment/feedback-api'
-          vault-url: 'https://vault.admin.meedio.pro'
+          kubectl-namespace: feedback-api
+          kubectl-object: deployment/feedback-api
